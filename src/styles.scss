@@ -1,1 +1,54 @@
 /* You can add global styles to this file, and also import other style files */
+/* ===============================================
+   ESTILOS GLOBALES Y SISTEMA DE TEMAS
+   =============================================== */
+
+/* 1. Importamos una fuente elegante que usaremos en toda la web */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* 2. Un reseteo de CSS básico para consistencia entre navegadores */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 3. Definición de variables de color para los temas */
+:root {
+  /* TEMA CLARO (por defecto) */
+  --primary-color: #AF8F6F;       /* Un tono café/beige elegante */
+  --secondary-color: #74512D;     /* Café más oscuro para acentos */
+  --background-color: #F5EFE6;   /* Fondo claro, ligeramente cálido */
+  --surface-color: #FFFFFF;      /* Color para tarjetas y superficies (blanco limpio) */
+  --text-color: #543310;         /* Color de texto principal */
+  --text-muted-color: #74512D;   /* Color de texto secundario */
+  --border-color: #D4C5A5;       /* Color para bordes sutiles */
+  --success-color: #4CAF50;      /* Verde para acciones exitosas */
+  --error-color: #F44336;        /* Rojo para errores */
+}
+
+body.theme-dark {
+  /* TEMA OSCURO (se activa con la clase 'theme-dark' en el body) */
+  --primary-color: #AF8F6F;       /* El primario puede mantenerse para consistencia de marca */
+  --secondary-color: #E8DFCA;     /* Un secundario más claro para buen contraste */
+  --background-color: #1a1a1a;   /* Fondo oscuro profundo */
+  --surface-color: #2c2c2c;      /* Superficies oscuras (tarjetas, modales, etc.) */
+  --text-color: #F5EFE6;         /* Texto claro */
+  --text-muted-color: #AF8F6F;   /* Texto secundario en tono primario */
+  --border-color: #444;          /* Bordes más oscuros */
+  --success-color: #66BB6A;      /* Verde más brillante para tema oscuro */
+  --error-color: #EF5350;        /* Rojo más brillante para tema oscuro */
+}
+
+/* 4. Aplicamos los estilos y variables base al body */
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.5s, color 0.3s; /* Transición suave al cambiar de tema */
+}
+
+/* Activa el desplazamiento suave para toda la aplicación */
+html {
+  scroll-behavior: smooth;
+}

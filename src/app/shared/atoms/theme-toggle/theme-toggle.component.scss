@@ -1,0 +1,25 @@
+.theme-toggle-btn {
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+
+  &:hover {
+    background-color: var(--background-color);
+  }
+
+  // Estilos para los iconos SVG
+  svg {
+    width: 20px;
+    height: 20px;
+    // La clave: el color del borde del SVG usará la variable de color de texto del tema.
+    stroke: var(--text-color);
+    transition: stroke 0.3s;
+  }
+}
