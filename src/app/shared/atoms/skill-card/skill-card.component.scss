@@ -1,0 +1,96 @@
+.skill-card {
+    --glow-x: 50%;
+    --glow-y: 50%;
+    --glow-intensity: 0;
+    --glow-radius: 150px;
+    --glow-color: 132, 0, 255;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.5rem 1rem;
+    min-width: 100px;
+    min-height: 120px;
+    border-radius: 16px;
+    border: 1px solid var(--border-color, #392e4e);
+    background: var(--card-background, #060010cc);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+    cursor: default;
+
+    &:hover {
+        box-shadow: 
+            0 8px 25px rgba(0, 0, 0, 0.3),
+            0 0 30px rgba(var(--glow-color), 0.2);
+    }
+
+    // Border glow effect
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        padding: 4px;
+        background: radial-gradient(
+            var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+            rgba(var(--glow-color), calc(var(--glow-intensity) * 0.8)) 0%,
+            rgba(var(--glow-color), calc(var(--glow-intensity) * 0.4)) 30%,
+            transparent 60%
+        );
+        border-radius: inherit;
+        -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+    }
+
+    &__icon {
+        font-size: 2.5rem;
+        color: var(--text-color, #fff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 2;
+
+        i {
+            transition: transform 0.3s ease;
+        }
+    }
+
+    &:hover &__icon i {
+        transform: scale(1.1);
+    }
+
+    &__name {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-color, #fff);
+        text-align: center;
+        position: relative;
+        z-index: 2;
+    }
+    img {
+        width: 4rem;
+        height: 60px;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+        // First filter (for light theme)
+        filter: brightness(0) saturate(100%) invert(19%) sepia(72%) saturate(534%) hue-rotate(350deg) brightness(92%) contrast(94%);
+        
+        // Second filter (for dark theme)
+        :host-context(.theme-dark) & {
+            filter: brightness(0) saturate(100%) invert(89%) sepia(74%) saturate(1725%) hue-rotate(177deg) brightness(105%) contrast(94%);
+        }
+    }
+}

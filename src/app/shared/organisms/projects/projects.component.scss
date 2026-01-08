@@ -1,0 +1,156 @@
+
+.projects-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 4rem 2rem;
+  background-color: var(--background-color, #f5f5f5);
+  color: var(--text-color, #333);
+  position: relative;
+  overflow: hidden;
+
+  .stars-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+  }
+
+  .star {
+      position: absolute;
+      background-color: var(--text-color);
+      border-radius: 50%;
+      opacity: 0;
+      box-shadow: 0 0 4px var(--text-color);
+      animation: twinkle infinite ease-in-out;
+  }
+}
+
+@keyframes twinkle {
+    0% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(0.5); }
+}
+
+.timeline {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.timeline-item {
+  display:grid;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 30px; // Ensure space for the ball
+}
+
+
+
+.ball {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--primary-color, #007bff);
+  margin: 5px; // Align with the title text roughly
+  flex-shrink: 0;
+  box-shadow: 0 0 10px var(--primary-color, #007bff);
+}
+
+.line {
+  width: 2px;
+  background-color: var(--primary-color, #007bff);
+  flex-grow: 1;
+
+  min-height: 50px; // Minimum height for the line
+
+  &:first-child {
+    flex-basis: 2rem;
+    min-height: calc(50px + 2rem);
+  }
+}
+
+.timeline-content {
+  text-align: start;
+  margin-top: 2rem;
+  padding: 1rem;
+  border-radius: 10px;
+  position: relative;
+  background-color: transparent;
+  border:var(--border-color) 2px solid;
+  isolation: isolate; 
+
+  .project-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-muted-color);
+    position: relative; /* Asegura que el texto esté por encima */
+    z-index: 2;
+  }
+
+  .inspect {
+    color:#007bff
+  }
+
+  .project-description {
+    margin: 0;
+    color: var(--text-color, #666);
+    line-height: 1.5; 
+    position: relative; /* Asegura que el texto esté por encima */
+    z-index: 2;
+  }
+    /* CAPA DEL MEDIO: El fondo de la tarjeta (::after) */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0; /* Ocupa el 100% del espacio del padre */
+    background-color: var(--background-color, #f5f5f5); /* AQUÍ va el color de fondo */
+    border-radius: 10px; /* Mismo radio que el padre */
+    z-index: -1; /* Se pone detrás del texto */
+  }
+
+  /* CAPA DEL FONDO: El borde animado (::before) */
+  &::before {
+    content: '';
+    position: absolute;
+    
+    /* Hacemos que sobresalga 4px por cada lado */
+    inset: -4px; 
+    
+    /* El gradiente */
+    background-image: conic-gradient(from var(--angle), #ff4545, #00ff99, #006aff, #ff0095, #ff4545);
+    
+    /* Se pone detrás del fondo solido (::after) */
+    z-index: -2; 
+    
+    /* Radio un poco mayor para que se vea bien la curva */
+    border-radius: 14px; 
+    animation: 3s spin linear infinite;
+    
+    /* Opcional: una sombra suave del mismo color para efecto neón */
+    filter: blur(10px);
+    opacity: 0;
+    transition: ease 0.3s;
+  }
+  &:hover::before {
+    opacity: 0.8;
+  }
+}
+
+@keyframes spin {
+  from {
+    --angle: 0deg;
+  }
+  to {
+    --angle: 360deg;
+  }
+}

@@ -1,0 +1,27 @@
+<div class="about-me-wrapper">
+    <section class="about-me-section" id="section-about">
+        <div class="row">
+            <app-section-title class="col-12">About Me</app-section-title>
+        </div>
+        <div class="content row">
+            <div class="col-12 col-lg-4 image-container order-2 order-lg-1">
+                <img [src]="profileImage()" alt="Photo of me">
+            </div>
+            <div class="text col-12 col-lg-8 order-1 order-lg-2 text-center text-lg-start">
+                <p class="description">
+                    I am an {{ semester }}-semester Systems Engineering student at the University of Cauca with {{ age }} years old, currently ranked among the top students of my cohort. I am highly motivated by backend development, with a strong focus on building robust and scalable solutions using Spring Boot and Python.
+                </p>
+                <p class="description">
+                    To strengthen my backend profile, I have developed an interest in cybersecurity, earning a Cisco Junior Cybersecurity Analyst certification, which allows me to approach development with a security-oriented mindset. Additionally, I have completed the B1 English proficiency requirement, enabling me to work with technical documentation and international teams
+                </p>
+                <div class="d-flex justify-content-center">
+                    <a class="btn btn-primary mb-4 mt-lg-4" href="assets/resume.pdf" rel="noopener noreferrer" target="_blank">
+                        <i class="bi bi-file-earmark-medical"></i>
+                        View Resume
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+

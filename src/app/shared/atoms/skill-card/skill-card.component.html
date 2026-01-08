@@ -1,0 +1,8 @@
+<div class="skill-card" [style.--glow-color]="glowColor">
+    <div class="skill-card__icon">
+        <i *ngIf="iconType === 'class'" [class]="icon"></i>
+        <img *ngIf="iconType === 'src'" [src]="icon" alt="{{ name }} icon">
+    </div>
+
+    <span class="skill-card__name">{{ name }}</span>
+</div>

@@ -1,0 +1,31 @@
+<div class="home">
+    
+    <section id="section-home" class="home-section d-flex flex-column justify-content-center align-items-center text-center">
+        <div class="pillar-background" *ngIf="currentTheme() === 'dark'">
+            <app-light-pillar 
+                [interactive]="false" 
+                [intensity]="0.8"
+                [pillarRotation]="0">
+            </app-light-pillar>
+        </div>
+        <div class="pillar-background" *ngIf="currentTheme() === 'light'">
+            <app-light-pillar 
+                [interactive]="false" 
+                [topColor]="'#318f63'"
+                [bottomColor]="'#318f63'"
+                [intensity]="3.0"
+                [pillarRotation]="260">
+            </app-light-pillar>
+        </div>
+        <div class="profile-container m-5">
+            <img src="assets/profile2.png" alt="Profile Image" class="home-profile-img">
+        </div>
+        <h1 class="home-title">Software Developer</h1>
+        <h3 class="home-subtitle">Juan David Vela Coronado</h3>
+        <p style="color: var(--text-color);" class="mt-4">Backend developer with frontend experience</p>
+        <section class="d-flex m-5" style="gap: 5em;">
+            <app-social-button [size]="50" platform="linkedin" href="https://www.linkedin.com/in/juan-david-vela-coronado-a609b7266/"></app-social-button>
+            <app-social-button [size]="50" platform="github" href="https://github.com/juanvec06/"></app-social-button>
+        </section>
+    </section>
+</div>

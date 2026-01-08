@@ -1,0 +1,36 @@
+<div class="projects-section" id="section-projects">
+  <!-- Stars Background -->
+  <div class="stars-container">
+      <div *ngFor="let star of stars" 
+          class="star" 
+          [style.top.%]="star.top" 
+          [style.left.%]="star.left" 
+          [style.width.px]="star.size" 
+          [style.height.px]="star.size"
+          [style.animation-delay.s]="star.delay"
+          [style.animation-duration.s]="star.duration">
+      </div>
+  </div>
+  <div class="timeline">
+    <div class="row">
+      <div class="col-4">
+        <app-section-title>Projects</app-section-title>
+      </div>
+    </div>
+    <div class="timeline-item" *ngFor="let project of projects; let last = last; let first = first">
+        <div class="row">
+            <div class="timeline-marker col-2">
+                <div class="line" [style.visibility]="first ? 'hidden' : 'visible'"></div>
+                <div class="ball"></div>
+                <div class="line" [style.visibility]="last ? 'hidden' : 'visible'"></div>
+            </div>
+          <div class="col-10">
+              <button class="timeline-content" (click)="openProjectLink(project.Url)">
+                  <h3 class="project-title">{{ project.title }}</h3>
+                  <p class="project-description">{{ project.description }}</p>
+              </button>
+          </div>
+        </div>
+    </div>
+  </div>
+</div>

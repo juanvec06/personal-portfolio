@@ -1,0 +1,23 @@
+<section class="skills-section" id="section-skills">
+    <div class="container">
+        <app-section-title>Skills</app-section-title>
+        
+        <div class="skills-categories">
+            @for (category of skillCategories; track category.title) {
+                <div class="skill-category">
+                    <h3 class="category-title">{{ category.title }}</h3>
+                    <div class="skills-grid">
+                        @for (skill of category.skills; track skill.name) {
+                            <app-skill-card 
+                                [name]="skill.name" 
+                                [icon]="skill.icon"
+                                [iconType]="skill.iconType || 'class'"
+                                [glowColor]="category.glowColor">
+                            </app-skill-card>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

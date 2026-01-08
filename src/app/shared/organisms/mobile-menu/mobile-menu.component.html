@@ -1,0 +1,25 @@
+<div class="mobile-menu-modal" *ngIf="isOpen">
+  <div class="modal-backdrop" (click)="onClose()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <span class="modal-title">Menu</span>
+      <button class="close-btn" (click)="onClose()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="mobile-nav-links social-icons">
+      <a href="#section-home" class="mobile-nav-item" (click)="onClose()">Home</a>
+      <a href="#section-projects" class="mobile-nav-item" (click)="onClose()">Projects</a>
+      <a href="#section-about" class="mobile-nav-item" (click)="onClose()">About Me</a>
+      <a href="#section-certifications" class="mobile-nav-item" (click)="onClose()">Certifications</a>
+      <a href="#section-skills" class="mobile-nav-item" (click)="onClose()">Skills</a>
+      
+      <div class="d-flex" style="gap: 2em;" *ngIf="isMobileView">
+        <app-social-button platform="linkedin" href="https://www.linkedin.com/in/juan-david-vela-coronado-a609b7266/" [size]="34"></app-social-button>
+        <app-social-button platform="github" href="https://github.com/juanvec06/" [size]="34"></app-social-button>
+      </div>
+      
+      <app-theme-toggle *ngIf="isMobileView"></app-theme-toggle>
+    </div>
+  </div>
+</div>

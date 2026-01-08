@@ -1,11 +1,16 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/organisms/navbar/navbar.component';
+import { HomeComponent } from './shared/organisms/home/home.component';
+import { ProjectsComponent } from './shared/organisms/projects/projects.component';
+import { AboutMeComponent } from './shared/organisms/about-me/about-me.component';
+import { SkillsComponent } from './shared/organisms/skills/skills.component';
+import { FooterComponent } from './shared/organisms/footer/footer.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent],
+  imports: [RouterOutlet, NavbarComponent, HomeComponent, ProjectsComponent, AboutMeComponent, SkillsComponent, FooterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

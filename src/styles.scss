@@ -12,6 +12,11 @@
   padding: 0;
   box-sizing: border-box;
 }
+@property --angle{
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
 
 /* 3. Definición de variables de color para los temas */
 :root {
@@ -23,21 +28,25 @@
   --text-color: #543310;         /* Color de texto principal */
   --text-muted-color: #74512D;   /* Color de texto secundario */
   --border-color: #D4C5A5;       /* Color para bordes sutiles */
-  --success-color: #4CAF50;      /* Verde para acciones exitosas */
-  --error-color: #F44336;        /* Rojo para errores */
+  --shiny-color: #b39c84;      /* Color brillante para efectos */
+  --contrast-text-color: #318f63; 
+  --gradient-color: #6e5e3f77;
+  --card-background: #d1d8adcc;
 }
 
 body.theme-dark {
-  /* TEMA OSCURO (se activa con la clase 'theme-dark' en el body) */
-  --primary-color: #AF8F6F;       /* El primario puede mantenerse para consistencia de marca */
-  --secondary-color: #E8DFCA;     /* Un secundario más claro para buen contraste */
-  --background-color: #1a1a1a;   /* Fondo oscuro profundo */
-  --surface-color: #2c2c2c;      /* Superficies oscuras (tarjetas, modales, etc.) */
-  --text-color: #F5EFE6;         /* Texto claro */
-  --text-muted-color: #AF8F6F;   /* Texto secundario en tono primario */
-  --border-color: #444;          /* Bordes más oscuros */
-  --success-color: #66BB6A;      /* Verde más brillante para tema oscuro */
-  --error-color: #EF5350;        /* Rojo más brillante para tema oscuro */
+  /* TEMA OSCURO (Estilo Galáctico) */
+  --primary-color: #5d66df;       /* Violeta eléctrico (Nebulosa) */
+  --secondary-color: #00F0FF;     /* Cian neón (Estrellas/Energía) */
+  --background-color: #030014;    /* Negro profundo azulado (Espacio vacío) */
+  --surface-color: #0F0B29;       /* Azul noche profundo (Superficies) */
+  --text-color: #d4e3f7;          /* Blanco estelar (con ligero tinte lavanda) */
+  --text-muted-color: #B5A8D1;    /* Polvo estelar (Lavanda grisáceo) */
+  --border-color: #2D2457;        /* Borde cósmico */
+  --shiny-color: #747a80;
+  --contrast-text-color: #ecda37;  // Para el título
+  --gradient-color: #88d5f331;
+  --card-background: #060010cc;
 }
 
 /* 4. Aplicamos los estilos y variables base al body */
