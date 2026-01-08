@@ -1,6 +1,18 @@
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, AfterViewInit, NgZone, PLATFORM_ID, Inject, OnChanges, SimpleChanges, inject, effect } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import * as THREE from 'three';
+
+// 1. CAMBIO IMPORTANTE: Importamos solo lo necesario de Three.js
+import { 
+  Scene, 
+  OrthographicCamera, 
+  WebGLRenderer, 
+  ShaderMaterial, 
+  Vector2, 
+  Color, 
+  PlaneGeometry, 
+  Mesh 
+} from 'three';
+
 import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
@@ -51,19 +63,19 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
 
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
 
-  /**
-  * Servicio inyectado encargado de la lógica de negocio del tema.
-  */
   public themeService = inject(ThemeService);
 
   webGLSupported = true;
-  private renderer: THREE.WebGLRenderer | null = null;
-  private material: THREE.ShaderMaterial | null = null;
-  private scene: THREE.Scene | null = null;
-  private camera: THREE.OrthographicCamera | null = null;
-  private geometry: THREE.PlaneGeometry | null = null;
+  
+  // 2. Quitamos el prefijo 'THREE.' en las definiciones de tipos
+  private renderer: WebGLRenderer | null = null;
+  private material: ShaderMaterial | null = null;
+  private scene: Scene | null = null;
+  private camera: OrthographicCamera | null = null;
+  private geometry: PlaneGeometry | null = null;
+  
   private rafId: number | null = null;
-  private mouse = new THREE.Vector2(0, 0);
+  private mouse = new Vector2(0, 0); // THREE.Vector2 -> Vector2
   private time = 0;
   private resizeObserver: ResizeObserver | null = null;
   private configurationTheme = 'blendMax(radialBound, fieldDistance, 1.0)';
@@ -131,12 +143,12 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // Scene setup
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    // 3. Quitamos el prefijo 'THREE.' en las instanciaciones
+    this.scene = new Scene();
+    this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
     try {
-      this.renderer = new THREE.WebGLRenderer({
+      this.renderer = new WebGLRenderer({
         antialias: false,
         alpha: true,
         powerPreference: 'high-performance',
@@ -154,7 +166,6 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.appendChild(this.renderer.domElement);
 
-    // Shader materials
     const vertexShader = `
       varying vec2 vUv;
       void main() {
@@ -189,14 +200,12 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
         return mat2(c, -s, s, c);
       }
 
-      // Procedural noise function
       float noise(vec2 coord) {
         float G = E;
         vec2 r = (G * sin(G * coord));
         return fract(r.x * r.y * (1.0 + coord.x));
       }
 
-      // Apply layered wave deformation to position
       vec3 applyWaveDeformation(vec3 pos, float timeOffset) {
         float frequency = 1.0;
         float amplitude = 1.0;
@@ -213,7 +222,6 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
         return deformed;
       }
 
-      // Polynomial smooth blending between two values
       float blendMin(float a, float b, float k) {
         float scaledK = k * 4.0;
         float h = max(scaledK - abs(a - b), 0.0);
@@ -228,7 +236,6 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
         vec2 fragCoord = vUv * uResolution;
         vec2 uv = (fragCoord * 2.0 - uResolution) / uResolution.y;
         
-        // Apply 2D rotation to UV coordinates
         float rotAngle = uPillarRotation * PI / 180.0;
         uv *= rot(rotAngle);
 
@@ -249,16 +256,13 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
           vec3 pos = origin + direction * depth;
           pos.xz *= rotX;
 
-          // Apply vertical scaling and wave deformation
           vec3 deformed = pos;
           deformed.y *= uPillarHeight;
           deformed = applyWaveDeformation(deformed + vec3(0.0, uTime, 0.0), uTime);
           
-          // Calculate distance field using cosine pattern
           vec2 cosinePair = cos(deformed.xz);
           float fieldDistance = length(cosinePair) - 0.2;
           
-          // Radial boundary constraint
           float radialBound = length(pos.xz) - uPillarWidth;
           fieldDistance = ${this.configurationTheme};
           fieldDistance = abs(fieldDistance) * 0.15 + 0.01;
@@ -270,11 +274,9 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
           depth += fieldDistance;
         }
 
-        // Normalize by pillar width to maintain consistent glow regardless of size
         float widthNormalization = uPillarWidth / 3.0;
         color = tanh(color * uGlowAmount / widthNormalization);
         
-        // Add noise postprocessing
         float rnd = noise(gl_FragCoord.xy);
         color -= rnd / 15.0 * uNoiseIntensity;
         
@@ -282,15 +284,16 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       }
     `;
 
-    this.material = new THREE.ShaderMaterial({
+    // 4. Continuamos quitando el prefijo THREE en el Material y los Uniforms
+    this.material = new ShaderMaterial({
       vertexShader,
       fragmentShader,
       uniforms: {
         uTime: { value: 0 },
-        uResolution: { value: new THREE.Vector2(width, height) },
+        uResolution: { value: new Vector2(width, height) }, // new Vector2
         uMouse: { value: this.mouse },
-        uTopColor: { value: new THREE.Color(this.topColor) },
-        uBottomColor: { value: new THREE.Color(this.bottomColor) },
+        uTopColor: { value: new Color(this.topColor) }, // new Color
+        uBottomColor: { value: new Color(this.bottomColor) }, // new Color
         uIntensity: { value: this.intensity },
         uInteractive: { value: this.interactive },
         uGlowAmount: { value: this.glowAmount },
@@ -304,22 +307,19 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       depthTest: false
     });
 
-    this.geometry = new THREE.PlaneGeometry(2, 2);
-    const mesh = new THREE.Mesh(this.geometry, this.material);
+    this.geometry = new PlaneGeometry(2, 2);
+    const mesh = new Mesh(this.geometry, this.material);
     this.scene.add(mesh);
 
-    // Event listeners
     if (this.interactive) {
       this.ngZone.runOutsideAngular(() => {
         container.addEventListener('mousemove', this.handleMouseMove.bind(this), { passive: true });
       });
     }
 
-    // Resize observer
     this.resizeObserver = new ResizeObserver(() => this.handleResize());
     this.resizeObserver.observe(container);
 
-    // Animation loop
     this.ngZone.runOutsideAngular(() => this.animate());
   }
 
@@ -335,9 +335,6 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   private handleResize() {
     if (!this.renderer || !this.material || !this.containerRef) return;
     
-    // Slight debounce logic or just direct update
-    // For simplicity, direct update is often fine with ResizeObserver, but let's be safe
-    // Actually, ResizeObserver fires in microtasks/next loop, so it's efficient enough.
     const container = this.containerRef.nativeElement;
     const newWidth = container.clientWidth;
     const newHeight = container.clientHeight;
@@ -366,13 +363,6 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       this.resizeObserver = null;
     }
 
-    if (this.interactive && this.containerRef?.nativeElement) {
-      // The event listener is anonymous in the React code via closure, but here I used a bound method or anonymous.
-      // Since I did addEventListener in initThree, I should remove it.
-      // But I used an anonymous function wrapper or similar? I need to be careful.
-      // Re-implement event listener cleanly.
-    }
-    
     if (this.renderer) {
       this.renderer.dispose();
       this.renderer.forceContextLoss();

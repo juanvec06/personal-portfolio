@@ -1,11 +1,12 @@
 import { Component, inject, computed } from '@angular/core';
+import { NgOptimizedImage } from '@angular/common';
 import { SectionTitleComponent } from '../../atoms/section-title/section-title.component';
 import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-about-me',
   standalone: true,
-  imports: [SectionTitleComponent],
+  imports: [SectionTitleComponent, NgOptimizedImage],
   templateUrl: './about-me.component.html',
   styleUrl: './about-me.component.scss'
 })
