@@ -1,6 +1,6 @@
 <div class="projects-section" id="section-projects">
-  <!-- Stars Background -->
-  <div class="stars-container">
+  <!-- Stars Background (solo en desktop) -->
+  <div class="stars-container" *ngIf="!isMobile()">
       <div *ngFor="let star of stars" 
           class="star" 
           [style.top.%]="star.top" 

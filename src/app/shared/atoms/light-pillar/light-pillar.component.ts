@@ -85,30 +85,47 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     @Inject(PLATFORM_ID) private platformId: Object,
     private ngZone: NgZone
   ) {
-    effect(() => {
-      const theme = this.themeService.theme();
-      if (theme === 'dark') {
-        this.configurationTheme = 'blendMax(radialBound, fieldDistance, 1.0)';
-      } else {
-        this.configurationTheme = 'blendMin(radialBound, fieldDistance, 1.0)';
-      }
+    try {
+      effect(() => {
+        const theme = this.themeService.theme();
+        if (theme === 'dark') {
+          this.configurationTheme = 'blendMax(radialBound, fieldDistance, 1.0)';
+        } else {
+          this.configurationTheme = 'blendMin(radialBound, fieldDistance, 1.0)';
+        }
 
-      if (this.isViewInitialized && this.webGLSupported && isPlatformBrowser(this.platformId)) {
-        this.ngZone.runOutsideAngular(() => {
-            this.cleanup();
-            this.initThree();
-        });
-      }
-    });
+        if (this.isViewInitialized && this.webGLSupported && isPlatformBrowser(this.platformId)) {
+          this.ngZone.runOutsideAngular(() => {
+            try {
+              this.cleanup();
+              this.initThree();
+            } catch (error) {
+              console.warn('Error re-initializing Three.js:', error);
+              this.webGLSupported = false;
+            }
+          });
+        }
+      });
+    } catch (error) {
+      console.warn('Error in LightPillarComponent constructor:', error);
+      this.webGLSupported = false;
+    }
   }
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-      if (!gl) {
+      try {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (!gl) {
+          this.webGLSupported = false;
+          console.warn('WebGL is not supported in this browser');
+        }
+        // Limpiar el canvas de prueba
+        canvas.remove();
+      } catch (error) {
+        console.warn('Error checking WebGL support:', error);
         this.webGLSupported = false;
-        console.warn('WebGL is not supported in this browser');
       }
     }
   }
@@ -131,7 +148,12 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     this.isViewInitialized = true;
     if (!this.webGLSupported || !isPlatformBrowser(this.platformId)) return;
 
-    this.initThree();
+    try {
+      this.initThree();
+    } catch (error) {
+      console.warn('Error initializing Three.js in ngAfterViewInit:', error);
+      this.webGLSupported = false;
+    }
   }
 
   ngOnDestroy() {

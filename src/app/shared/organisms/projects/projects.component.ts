@@ -1,6 +1,7 @@
 import { Component , inject} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionTitleComponent } from '../../atoms/section-title/section-title.component';
+import { DeviceService } from '../../../core/services/device.service';
 
 interface Project {
   title: string;
@@ -22,6 +23,15 @@ interface Star {
   styleUrl: './projects.component.scss'
 })
 export class ProjectsComponent {
+  /**
+   * Servicio inyectado para detectar si el dispositivo es móvil.
+   */
+  public deviceService = inject(DeviceService);
+
+  /**
+   * Señal reactiva que indica si el dispositivo es móvil.
+   */
+  public isMobile = this.deviceService.isMobile;
   projects: Project[] = [
     {
       title: 'Appointments and administrative utilities Manager System',

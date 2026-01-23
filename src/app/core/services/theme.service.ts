@@ -37,24 +37,60 @@ export class ThemeService {
    * si el usuario no ha establecido una preferencia manual.
    */
   private initializeTheme(): void {
-    // 1. Verificamos si existe una preferencia guardada previamente
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    if (storedTheme) {
-      this.setTheme(storedTheme);
-      return;
-    }
-
-    // 2. Si no, detectamos la preferencia del sistema
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    this.setTheme(prefersDark.matches ? 'dark' : 'light');
-
-    // Escuchamos cambios en tiempo real en la preferencia del sistema
-    prefersDark.addEventListener('change', (e) => {
-      // Solo aplicamos el cambio del sistema si el usuario NO ha forzado una preferencia manual
-      if (!localStorage.getItem('theme')) {
-        this.setTheme(e.matches ? 'dark' : 'light');
+    try {
+      // 1. Verificamos si existe una preferencia guardada previamente
+      const storedTheme = this.getStoredTheme();
+      if (storedTheme) {
+        this.setTheme(storedTheme);
+        return;
       }
-    });
+
+      // 2. Si no, detectamos la preferencia del sistema
+      if (typeof window !== 'undefined' && window.matchMedia) {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        this.setTheme(prefersDark.matches ? 'dark' : 'light');
+
+        // Escuchamos cambios en tiempo real en la preferencia del sistema
+        prefersDark.addEventListener('change', (e) => {
+          // Solo aplicamos el cambio del sistema si el usuario NO ha forzado una preferencia manual
+          if (!this.getStoredTheme()) {
+            this.setTheme(e.matches ? 'dark' : 'light');
+          }
+        });
+      } else {
+        this.setTheme('light');
+      }
+    } catch (error) {
+      console.warn('Error initializing theme:', error);
+      this.setTheme('light');
+    }
+  }
+
+  /**
+   * Obtiene el tema almacenado en localStorage de forma segura.
+   */
+  private getStoredTheme(): Theme | null {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem('theme') as Theme | null;
+      }
+    } catch (e) {
+      // localStorage puede no estar disponible en algunos navegadores/modos
+    }
+    return null;
+  }
+
+  /**
+   * Guarda el tema en localStorage de forma segura.
+   */
+  private saveTheme(theme: Theme): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('theme', theme);
+      }
+    } catch (e) {
+      // localStorage puede no estar disponible en algunos navegadores/modos
+    }
   }
 
   /**
@@ -66,7 +102,7 @@ export class ThemeService {
     const newTheme = this.theme() === 'light' ? 'dark' : 'light';
     this.setTheme(newTheme);
     // Persistencia de la elección
-    localStorage.setItem('theme', newTheme);
+    this.saveTheme(newTheme);
   }
 
   /**
@@ -77,11 +113,17 @@ export class ThemeService {
    * @param theme - El tema a aplicar ('light' o 'dark').
    */
   private setTheme(theme: Theme): void {
-    this.theme.set(theme);
-    if (theme === 'dark') {
-      document.body.classList.add('theme-dark');
-    } else {
-      document.body.classList.remove('theme-dark');
+    try {
+      this.theme.set(theme);
+      if (typeof document !== 'undefined' && document.body) {
+        if (theme === 'dark') {
+          document.body.classList.add('theme-dark');
+        } else {
+          document.body.classList.remove('theme-dark');
+        }
+      }
+    } catch (error) {
+      console.warn('Error setting theme:', error);
     }
   }
 }

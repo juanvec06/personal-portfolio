@@ -1,23 +1,40 @@
 <div class="home">
     
     <section id="section-home" class="home-section d-flex flex-column justify-content-center align-items-center text-center">
-        @defer (on idle) {
-            <div class="pillar-background" *ngIf="currentTheme() === 'dark'">
-                <app-light-pillar 
-                    [interactive]="false" 
-                    [intensity]="0.8"
-                    [pillarRotation]="0">
-                </app-light-pillar>
+        <!-- Efecto de estrellas para móvil -->
+        <div class="stars-container" *ngIf="isMobile()">
+            <div *ngFor="let star of stars" 
+                class="star" 
+                [style.top.%]="star.top" 
+                [style.left.%]="star.left" 
+                [style.width.px]="star.size" 
+                [style.height.px]="star.size"
+                [style.animation-delay.s]="star.delay"
+                [style.animation-duration.s]="star.duration">
             </div>
-            <div class="pillar-background" *ngIf="currentTheme() === 'light'">
-                <app-light-pillar 
-                    [interactive]="false" 
-                    [topColor]="'#318f63'"
-                    [bottomColor]="'#318f63'"
-                    [intensity]="3.0"
-                    [pillarRotation]="260">
-                </app-light-pillar>
-            </div>
+        </div>
+        <!-- Efecto pillar para desktop -->
+        @if (!isMobile()) {
+            @defer (on idle) {
+                <div class="pillar-background" *ngIf="currentTheme() === 'dark'">
+                    <app-light-pillar 
+                        [interactive]="false" 
+                        [intensity]="0.8"
+                        [pillarRotation]="0">
+                    </app-light-pillar>
+                </div>
+                <div class="pillar-background" *ngIf="currentTheme() === 'light'">
+                    <app-light-pillar 
+                        [interactive]="false" 
+                        [topColor]="'#318f63'"
+                        [bottomColor]="'#318f63'"
+                        [intensity]="3.0"
+                        [pillarRotation]="260">
+                    </app-light-pillar>
+                </div>
+            } @error {
+                <!-- Fallback silencioso si hay error cargando LightPillar -->
+            }
         }
         <div class="profile-container m-5">
             <img src="assets/profile2.png" alt="Profile Image" class="home-profile-img">
