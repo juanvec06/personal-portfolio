@@ -1,19 +1,37 @@
 import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, AfterViewInit, NgZone, PLATFORM_ID, Inject, OnChanges, SimpleChanges, inject, effect } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
-// 1. CAMBIO IMPORTANTE: Importamos solo lo necesario de Three.js
 import { 
   Scene, 
   OrthographicCamera, 
   WebGLRenderer, 
   ShaderMaterial, 
   Vector2, 
+  Vector3,
   Color, 
   PlaneGeometry, 
   Mesh 
 } from 'three';
 
 import { ThemeService } from '../../../core/services/theme.service';
+
+// Configuración de calidad para diferentes dispositivos
+type QualityLevel = 'low' | 'medium' | 'high';
+
+interface QualitySettings {
+  iterations: number;
+  waveIterations: number;
+  pixelRatio: number;
+  precision: string;
+  stepMultiplier: number;
+  targetFPS: number;
+}
+
+const QUALITY_PRESETS: Record<QualityLevel, QualitySettings> = {
+  low: { iterations: 24, waveIterations: 1, pixelRatio: 0.5, precision: 'mediump', stepMultiplier: 1.5, targetFPS: 30 },
+  medium: { iterations: 40, waveIterations: 2, pixelRatio: 0.65, precision: 'mediump', stepMultiplier: 1.2, targetFPS: 60 },
+  high: { iterations: 80, waveIterations: 4, pixelRatio: 2, precision: 'highp', stepMultiplier: 1.0, targetFPS: 60 }
+};
 
 @Component({
   selector: 'app-light-pillar',
@@ -60,6 +78,7 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   @Input() noiseIntensity = 0.5;
   @Input() mixBlendMode = 'screen';
   @Input() pillarRotation = 0;
+  @Input() quality: QualityLevel = 'high'; // Nueva prop para controlar calidad
 
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
 
@@ -67,7 +86,6 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
 
   webGLSupported = true;
   
-  // 2. Quitamos el prefijo 'THREE.' en las definiciones de tipos
   private renderer: WebGLRenderer | null = null;
   private material: ShaderMaterial | null = null;
   private scene: Scene | null = null;
@@ -75,11 +93,24 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   private geometry: PlaneGeometry | null = null;
   
   private rafId: number | null = null;
-  private mouse = new Vector2(0, 0); // THREE.Vector2 -> Vector2
+  private mouse = new Vector2(0, 0);
   private time = 0;
   private resizeObserver: ResizeObserver | null = null;
-  private configurationTheme = 'blendMax(radialBound, fieldDistance, 1.0)';
+  // Nombres actualizados para coincidir con las variables del shader optimizado (d, bound)
+  private configurationTheme = 'blendMax(bound, d, 1.0)';
   private isViewInitialized = false;
+  
+  // Nuevas propiedades para optimización
+  private effectiveQuality: QualityLevel = 'high';
+  private qualitySettings: QualitySettings = QUALITY_PRESETS.high;
+  private lastFrameTime = 0;
+  private frameTime = 1000 / 60;
+  private mouseMoveThrottleId: number | null = null;
+  private resizeDebounceId: number | null = null;
+  
+  // Valores precalculados para evitar cálculos en el shader
+  private waveSin = Math.sin(0.4);
+  private waveCos = Math.cos(0.4);
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -88,10 +119,11 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     try {
       effect(() => {
         const theme = this.themeService.theme();
+        // Nombres actualizados: bound (antes radialBound), d (antes fieldDistance)
         if (theme === 'dark') {
-          this.configurationTheme = 'blendMax(radialBound, fieldDistance, 1.0)';
+          this.configurationTheme = 'blendMax(bound, d, 1.0)';
         } else {
-          this.configurationTheme = 'blendMin(radialBound, fieldDistance, 1.0)';
+          this.configurationTheme = 'blendMin(bound, d, 1.0)';
         }
 
         if (this.isViewInitialized && this.webGLSupported && isPlatformBrowser(this.platformId)) {
@@ -121,26 +153,64 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
           this.webGLSupported = false;
           console.warn('WebGL is not supported in this browser');
         }
-        // Limpiar el canvas de prueba
         canvas.remove();
+        
+        // Detectar capacidades del dispositivo y ajustar calidad
+        this.detectDeviceCapabilities();
       } catch (error) {
         console.warn('Error checking WebGL support:', error);
         this.webGLSupported = false;
       }
     }
   }
+  
+  /**
+   * Detecta las capacidades del dispositivo y ajusta la calidad automáticamente.
+   * Esto mejora el rendimiento en dispositivos móviles y de bajo rendimiento.
+   */
+  private detectDeviceCapabilities() {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isLowEndDevice = isMobile || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+    
+    // Ajustar calidad según el dispositivo
+    let effectiveQuality = this.quality;
+    if (isLowEndDevice && this.quality === 'high') {
+      effectiveQuality = 'medium';
+    }
+    if (isMobile && this.quality !== 'low') {
+      effectiveQuality = 'low';
+    }
+    
+    this.effectiveQuality = effectiveQuality;
+    this.qualitySettings = { ...QUALITY_PRESETS[effectiveQuality] };
+    
+    // Ajustar pixel ratio dinámicamente para calidad alta
+    if (effectiveQuality === 'high') {
+      this.qualitySettings.pixelRatio = Math.min(window.devicePixelRatio, 2);
+    }
+    
+    // Calcular frame time según FPS objetivo
+    this.frameTime = 1000 / this.qualitySettings.targetFPS;
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (!this.material) return;
 
     if (changes['topColor']) {
-      this.material.uniforms['uTopColor'].value.set(this.topColor);
+      const color = new Color(this.topColor);
+      this.material.uniforms['uTopColor'].value.set(color.r, color.g, color.b);
     }
     if (changes['bottomColor']) {
-      this.material.uniforms['uBottomColor'].value.set(this.bottomColor);
+      const color = new Color(this.bottomColor);
+      this.material.uniforms['uBottomColor'].value.set(color.r, color.g, color.b);
     }
     if (changes['intensity']) {
       this.material.uniforms['uIntensity'].value = this.intensity;
+    }
+    if (changes['pillarRotation']) {
+      const pillarRotRad = (this.pillarRotation * Math.PI) / 180;
+      this.material.uniforms['uPillarRotCos'].value = Math.cos(pillarRotRad);
+      this.material.uniforms['uPillarRotSin'].value = Math.sin(pillarRotRad);
     }
   }
 
@@ -164,8 +234,8 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     const container = this.containerRef.nativeElement;
     const width = container.clientWidth;
     const height = container.clientHeight;
+    const settings = this.qualitySettings;
 
-    // 3. Quitamos el prefijo 'THREE.' en las instanciaciones
     this.scene = new Scene();
     this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
@@ -173,8 +243,9 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       this.renderer = new WebGLRenderer({
         antialias: false,
         alpha: true,
-        powerPreference: 'high-performance',
-        precision: 'lowp',
+        // Usar low-power en calidades bajas para ahorrar batería
+        powerPreference: this.effectiveQuality === 'high' ? 'high-performance' : 'low-power',
+        precision: settings.precision as 'highp' | 'mediump' | 'lowp',
         stencil: false,
         depth: false
       });
@@ -185,7 +256,8 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     }
 
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Usar pixel ratio de la configuración de calidad
+    this.renderer.setPixelRatio(settings.pixelRatio);
     container.appendChild(this.renderer.domElement);
 
     const vertexShader = `
@@ -196,7 +268,10 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       }
     `;
 
+    // Shader optimizado con iteraciones configurables y funciones trigonométricas precalculadas
     const fragmentShader = `
+      precision ${settings.precision} float;
+
       uniform float uTime;
       uniform vec2 uResolution;
       uniform vec2 uMouse;
@@ -208,41 +283,19 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       uniform float uPillarWidth;
       uniform float uPillarHeight;
       uniform float uNoiseIntensity;
-      uniform float uPillarRotation;
+      // Valores precalculados de sin/cos para evitar cálculos en el shader
+      uniform float uRotCos;
+      uniform float uRotSin;
+      uniform float uPillarRotCos;
+      uniform float uPillarRotSin;
+      uniform float uWaveSin;
+      uniform float uWaveCos;
       varying vec2 vUv;
 
-      const float PI = 3.141592653589793;
-      const float EPSILON = 0.001;
-      const float E = 2.71828182845904523536;
-      const float HALF = 0.5;
-
-      mat2 rot(float angle) {
-        float s = sin(angle);
-        float c = cos(angle);
-        return mat2(c, -s, s, c);
-      }
-
-      float noise(vec2 coord) {
-        float G = E;
-        vec2 r = (G * sin(G * coord));
-        return fract(r.x * r.y * (1.0 + coord.x));
-      }
-
-      vec3 applyWaveDeformation(vec3 pos, float timeOffset) {
-        float frequency = 1.0;
-        float amplitude = 1.0;
-        vec3 deformed = pos;
-        
-        for(float i = 0.0; i < 4.0; i++) {
-          deformed.xz *= rot(0.4);
-          float phase = timeOffset * i * 2.0;
-          vec3 oscillation = cos(deformed.zxy * frequency - phase);
-          deformed += oscillation * amplitude;
-          frequency *= 2.0;
-          amplitude *= HALF;
-        }
-        return deformed;
-      }
+      // Constantes para optimización - step multiplier aumenta el paso en calidades bajas
+      const float STEP_MULT = ${settings.stepMultiplier.toFixed(1)};
+      const int MAX_ITER = ${settings.iterations};
+      const int WAVE_ITER = ${settings.waveIterations};
 
       float blendMin(float a, float b, float k) {
         float scaledK = k * 4.0;
@@ -255,74 +308,100 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       }
 
       void main() {
-        vec2 fragCoord = vUv * uResolution;
-        vec2 uv = (fragCoord * 2.0 - uResolution) / uResolution.y;
-        
-        float rotAngle = uPillarRotation * PI / 180.0;
-        uv *= rot(rotAngle);
+        // Simplificado: cálculo de UV más eficiente
+        vec2 uv = (vUv * 2.0 - 1.0) * vec2(uResolution.x / uResolution.y, 1.0);
+        // Rotación usando valores precalculados
+        uv = vec2(uPillarRotCos * uv.x - uPillarRotSin * uv.y, uPillarRotSin * uv.x + uPillarRotCos * uv.y);
 
-        vec3 origin = vec3(0.0, 0.0, -10.0);
-        vec3 direction = normalize(vec3(uv, 1.0));
+        vec3 ro = vec3(0.0, 0.0, -10.0);
+        vec3 rd = normalize(vec3(uv, 1.0));
 
-        float maxDepth = 50.0;
-        float depth = 0.1;
-
-        mat2 rotX = rot(uTime * 0.3);
-        if(uInteractive && length(uMouse) > 0.0) {
-          rotX = rot(uMouse.x * PI * 2.0);
+        // Usar valores precalculados en lugar de calcular sin/cos por píxel
+        float rotC = uRotCos;
+        float rotS = uRotSin;
+        if(uInteractive && (uMouse.x != 0.0 || uMouse.y != 0.0)) {
+          float a = uMouse.x * 6.283185;
+          rotC = cos(a);
+          rotS = sin(a);
         }
 
-        vec3 color = vec3(0.0);
+        vec3 col = vec3(0.0);
+        float t = 0.1;
         
-        for(float i = 0.0; i < 100.0; i++) {
-          vec3 pos = origin + direction * depth;
-          pos.xz *= rotX;
+        // Bucle con iteraciones configurables según calidad
+        for(int i = 0; i < MAX_ITER; i++) {
+          vec3 p = ro + rd * t;
+          // Rotación inline más eficiente
+          p.xz = vec2(rotC * p.x - rotS * p.z, rotS * p.x + rotC * p.z);
 
-          vec3 deformed = pos;
-          deformed.y *= uPillarHeight;
-          deformed = applyWaveDeformation(deformed + vec3(0.0, uTime, 0.0), uTime);
+          vec3 q = p;
+          q.y = p.y * uPillarHeight + uTime;
           
-          vec2 cosinePair = cos(deformed.xz);
-          float fieldDistance = length(cosinePair) - 0.2;
+          float freq = 1.0;
+          float amp = 1.0;
+          // Iteraciones de onda reducidas en calidades bajas
+          for(int j = 0; j < WAVE_ITER; j++) {
+            q.xz = vec2(uWaveCos * q.x - uWaveSin * q.z, uWaveSin * q.x + uWaveCos * q.z);
+            q += cos(q.zxy * freq - uTime * float(j) * 2.0) * amp;
+            freq *= 2.0;
+            amp *= 0.5;
+          }
           
-          float radialBound = length(pos.xz) - uPillarWidth;
-          fieldDistance = ${this.configurationTheme};
-          fieldDistance = abs(fieldDistance) * 0.15 + 0.01;
+          float d = length(cos(q.xz)) - 0.2;
+          float bound = length(p.xz) - uPillarWidth;
+          float k = 4.0;
+          float h = max(k - abs(d - bound), 0.0);
+          d = ${this.configurationTheme};
+          d = abs(d) * 0.15 + 0.01;
 
-          vec3 gradient = mix(uBottomColor, uTopColor, smoothstep(15.0, -15.0, pos.y));
-          color += gradient * pow(1.0 / fieldDistance, 1.0);
+          // Gradiente simplificado
+          float grad = clamp((15.0 - p.y) / 30.0, 0.0, 1.0);
+          col += mix(uBottomColor, uTopColor, grad) / d;
 
-          if(fieldDistance < EPSILON || depth > maxDepth) break;
-          depth += fieldDistance;
+          // Step multiplier para terminar antes en calidades bajas
+          t += d * STEP_MULT;
+          if(t > 50.0) break;
         }
 
-        float widthNormalization = uPillarWidth / 3.0;
-        color = tanh(color * uGlowAmount / widthNormalization);
+        float widthNorm = uPillarWidth / 3.0;
+        col = tanh(col * uGlowAmount / widthNorm);
         
-        float rnd = noise(gl_FragCoord.xy);
-        color -= rnd / 15.0 * uNoiseIntensity;
+        // Ruido simplificado
+        col -= fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) / 15.0 * uNoiseIntensity;
         
-        gl_FragColor = vec4(color * uIntensity, 1.0);
+        gl_FragColor = vec4(col * uIntensity, 1.0);
       }
     `;
 
-    // 4. Continuamos quitando el prefijo THREE en el Material y los Uniforms
+    // Precalcular valores trigonométricos
+    const pillarRotRad = (this.pillarRotation * Math.PI) / 180;
+    
+    // Parsear colores a Vector3 para mejor rendimiento
+    const topColorParsed = new Color(this.topColor);
+    const bottomColorParsed = new Color(this.bottomColor);
+
     this.material = new ShaderMaterial({
       vertexShader,
       fragmentShader,
       uniforms: {
         uTime: { value: 0 },
-        uResolution: { value: new Vector2(width, height) }, // new Vector2
+        uResolution: { value: new Vector2(width, height) },
         uMouse: { value: this.mouse },
-        uTopColor: { value: new Color(this.topColor) }, // new Color
-        uBottomColor: { value: new Color(this.bottomColor) }, // new Color
+        uTopColor: { value: new Vector3(topColorParsed.r, topColorParsed.g, topColorParsed.b) },
+        uBottomColor: { value: new Vector3(bottomColorParsed.r, bottomColorParsed.g, bottomColorParsed.b) },
         uIntensity: { value: this.intensity },
         uInteractive: { value: this.interactive },
         uGlowAmount: { value: this.glowAmount },
         uPillarWidth: { value: this.pillarWidth },
         uPillarHeight: { value: this.pillarHeight },
         uNoiseIntensity: { value: this.noiseIntensity },
-        uPillarRotation: { value: this.pillarRotation }
+        // Valores precalculados - evita cálculos de sin/cos en el shader
+        uRotCos: { value: 1.0 },
+        uRotSin: { value: 0.0 },
+        uPillarRotCos: { value: Math.cos(pillarRotRad) },
+        uPillarRotSin: { value: Math.sin(pillarRotRad) },
+        uWaveSin: { value: this.waveSin },
+        uWaveCos: { value: this.waveCos }
       },
       transparent: true,
       depthWrite: false,
@@ -339,19 +418,45 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       });
     }
 
-    this.resizeObserver = new ResizeObserver(() => this.handleResize());
+    // Usar ResizeObserver con debounce para mejor rendimiento
+    this.resizeObserver = new ResizeObserver(() => this.handleResizeDebounced());
     this.resizeObserver.observe(container);
 
-    this.ngZone.runOutsideAngular(() => this.animate());
+    this.ngZone.runOutsideAngular(() => this.animate(performance.now()));
   }
 
+  /**
+   * Maneja el movimiento del mouse con throttling para evitar actualizaciones excesivas.
+   * Limita las actualizaciones a ~60fps máximo.
+   */
   private handleMouseMove(event: MouseEvent) {
-      if (!this.interactive || !this.renderer) return;
+    if (!this.interactive || !this.renderer) return;
 
-      const rect = this.renderer.domElement.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      this.mouse.set(x, y);
+    // Throttle: ignorar eventos si ya hay uno pendiente
+    if (this.mouseMoveThrottleId !== null) return;
+
+    this.mouseMoveThrottleId = window.setTimeout(() => {
+      this.mouseMoveThrottleId = null;
+    }, 16); // ~60fps
+
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    this.mouse.set(x, y);
+  }
+
+  /**
+   * Maneja el resize con debounce para evitar recálculos excesivos durante el redimensionamiento.
+   */
+  private handleResizeDebounced() {
+    if (this.resizeDebounceId !== null) {
+      clearTimeout(this.resizeDebounceId);
+    }
+
+    this.resizeDebounceId = window.setTimeout(() => {
+      this.handleResize();
+      this.resizeDebounceId = null;
+    }, 150); // Debounce de 150ms
   }
 
   private handleResize() {
@@ -364,20 +469,50 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     this.material.uniforms['uResolution'].value.set(newWidth, newHeight);
   }
 
-  private animate() {
+  /**
+   * Loop de animación optimizado con frame rate limitado según la calidad.
+   * En dispositivos de baja gama, limita a 30fps para reducir carga de GPU.
+   */
+  private animate(currentTime: number) {
     if (!this.material || !this.renderer || !this.scene || !this.camera) return;
 
-    this.time += 0.016 * this.rotationSpeed;
-    this.material.uniforms['uTime'].value = this.time;
-    this.renderer.render(this.scene, this.camera);
+    const deltaTime = currentTime - this.lastFrameTime;
 
-    this.rafId = requestAnimationFrame(() => this.animate());
+    // Solo renderizar si ha pasado suficiente tiempo (frame rate limiting)
+    if (deltaTime >= this.frameTime) {
+      this.time += 0.016 * this.rotationSpeed;
+      const t = this.time;
+      
+      // Actualizar uniforms
+      this.material.uniforms['uTime'].value = t;
+      // Precalcular sin/cos en JS en lugar de en el shader (mucho más eficiente)
+      this.material.uniforms['uRotCos'].value = Math.cos(t * 0.3);
+      this.material.uniforms['uRotSin'].value = Math.sin(t * 0.3);
+      
+      this.renderer.render(this.scene, this.camera);
+      
+      // Ajustar lastFrameTime para mantener frame rate consistente
+      this.lastFrameTime = currentTime - (deltaTime % this.frameTime);
+    }
+
+    this.rafId = requestAnimationFrame((time) => this.animate(time));
   }
 
   private cleanup() {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
+    }
+    
+    // Limpiar timeouts pendientes
+    if (this.mouseMoveThrottleId !== null) {
+      clearTimeout(this.mouseMoveThrottleId);
+      this.mouseMoveThrottleId = null;
+    }
+    
+    if (this.resizeDebounceId !== null) {
+      clearTimeout(this.resizeDebounceId);
+      this.resizeDebounceId = null;
     }
     
     if (this.resizeObserver) {

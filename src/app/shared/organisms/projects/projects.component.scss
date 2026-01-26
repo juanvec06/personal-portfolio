@@ -108,7 +108,10 @@
     position: relative; /* Asegura que el texto esté por encima */
     z-index: 2;
   }
-    /* CAPA DEL MEDIO: El fondo de la tarjeta (::after) */
+
+  //TODO: Solo se activa hover cuando estamos en dispositivos pointer: fine
+
+  /* CAPA DEL MEDIO: El fondo de la tarjeta (::after) */
   &::after {
     content: '';
     position: absolute;
@@ -145,7 +148,41 @@
     opacity: 0.8;
   }
 }
+.efecto-hover {
+    /* CAPA DEL MEDIO: El fondo de la tarjeta (::after) */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0; /* Ocupa el 100% del espacio del padre */
+    background-color: var(--background-color, #f5f5f5); /* AQUÍ va el color de fondo */
+    border-radius: 10px; /* Mismo radio que el padre */
+    z-index: -1; /* Se pone detrás del texto */
+  }
 
+  /* CAPA DEL FONDO: El borde animado (::before) */
+  &::before {
+    content: '';
+    position: absolute;
+    
+    /* Hacemos que sobresalga 4px por cada lado */
+    inset: -4px; 
+    
+    /* El gradiente */
+    background-image: conic-gradient(from var(--angle), #ff4545, #00ff99, #006aff, #ff0095, #ff4545);
+    
+    /* Se pone detrás del fondo solido (::after) */
+    z-index: -2; 
+    
+    /* Radio un poco mayor para que se vea bien la curva */
+    border-radius: 14px; 
+    animation: 3s spin linear infinite;
+    
+    /* Opcional: una sombra suave del mismo color para efecto neón */
+    filter: blur(10px);
+    opacity: 0.8;
+    transition: ease 0.3s;
+  }
+}
 @keyframes spin {
   from {
     --angle: 0deg;

@@ -1,4 +1,4 @@
-import { Component , inject} from '@angular/core';
+import { Component , inject, ViewChild, ElementRef, Renderer2, QueryList, ViewChildren} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionTitleComponent } from '../../atoms/section-title/section-title.component';
 import { DeviceService } from '../../../core/services/device.service';
@@ -26,12 +26,16 @@ export class ProjectsComponent {
   /**
    * Servicio inyectado para detectar si el dispositivo es móvil.
    */
-  public deviceService = inject(DeviceService);
+  protected deviceService = inject(DeviceService);
 
   /**
    * Señal reactiva que indica si el dispositivo es móvil.
    */
-  public isMobile = this.deviceService.isMobile;
+  protected isMobile = this.deviceService.isMobile;
+  /**
+   * Referencia a las tarjetas de proyecto.
+   */
+  @ViewChildren('projectCard') projectCards!: QueryList<ElementRef>;
   projects: Project[] = [
     {
       title: 'Appointments and administrative utilities Manager System',
@@ -57,10 +61,36 @@ export class ProjectsComponent {
 
   stars: Star[] = [];
 
+  constructor(private renderer: Renderer2) {}
+
   ngOnInit() {
     this.generateStars();
   }
+  ngAfterViewInit() {
+    if(this.isMobile()) {
+      const opciones = {
+        root: null, // usa el viewport del dispositivo
+        rootMargin: '-30% 0px -30% 0px', // Solo activa cuando está cerca del centro ignorando 30% de arriba y abajo
+        threshold: 0.5 // se activa cuando el 50% del elemento es visible
+      };
 
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Añadimos una clase que simula el hover al elemento que intersecta
+            this.renderer.addClass(entry.target, 'efecto-hover');
+          } else {
+            this.renderer.removeClass(entry.target, 'efecto-hover');
+          }
+        });
+      }, opciones);
+
+      // Observar cada tarjeta de proyecto
+      this.projectCards.forEach(card => {
+        observer.observe(card.nativeElement);
+      });
+    }
+  }
   generateStars() {
     const starCount = 100; // Cantidad de estrellas
     for (let i = 0; i < starCount; i++) {

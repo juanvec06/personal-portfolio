@@ -1,6 +1,6 @@
 <div class="projects-section" id="section-projects">
   <!-- Stars Background (solo en desktop) -->
-  <div class="stars-container" *ngIf="!isMobile()">
+  <div class="stars-container">
       <div *ngFor="let star of stars" 
           class="star" 
           [style.top.%]="star.top" 
@@ -25,7 +25,7 @@
                 <div class="line" [style.visibility]="last ? 'hidden' : 'visible'"></div>
             </div>
           <div class="col-10">
-              <button class="timeline-content" (click)="openProjectLink(project.Url)">
+              <button #projectCard class="timeline-content" (click)="openProjectLink(project.Url)">
                   <h3 class="project-title">{{ project.title }}</h3>
                   <p class="project-description">{{ project.description }}</p>
               </button>
