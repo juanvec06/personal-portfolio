@@ -15,7 +15,7 @@
 @property --angle{
   syntax: "<angle>";
   initial-value: 0deg;
-  inherits: false;
+  inherits: true;
 }
 
 /* 3. Definición de variables de color para los temas */
@@ -55,6 +55,13 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   transition: background-color 0.5s, color 0.3s; /* Transición suave al cambiar de tema */
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
 }
 
 /* Activa el desplazamiento suave para toda la aplicación */

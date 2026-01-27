@@ -20,14 +20,11 @@
       .image-container {
         text-align: center;
         img {
-          max-width: 150px;
+          max-width: 100%;
+          width: 100%;
+          object-fit: cover;
           border-radius: 10%;
           border: 3px solid var(--primary-color, #007bff);
-
-          @media (min-width: 992px) {
-            max-width: 100%;
-            width: 100%;
-          }
         }
       }
 

@@ -1,5 +1,6 @@
-import { Component, Input, ElementRef, AfterViewInit, OnDestroy, NgZone, PLATFORM_ID, Inject } from '@angular/core';
+import { inject, Component, Input, ElementRef, AfterViewInit, OnDestroy, NgZone, PLATFORM_ID, Inject, Renderer2, ViewChildren, QueryList} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { DeviceService } from '../../../core/services/device.service';
 
 @Component({
   selector: 'app-skill-card',
@@ -11,32 +12,62 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 export class SkillCardComponent implements AfterViewInit, OnDestroy {
   @Input() name: string = '';
   @Input() icon: string = '';
+  // Depending on whether the icon is a class or a src URL style changes, it must be indicated
   @Input() iconType: 'class' | 'src' = 'class';
   @Input() glowColor: string = '132, 0, 255';
+
+  // References to skill card elements for movile effect
+  @ViewChildren('skillCard') skillCards!: QueryList<ElementRef>;
 
   private cardElement: HTMLElement | null = null;
   private boundMouseMove: ((e: MouseEvent) => void) | null = null;
   private boundMouseLeave: (() => void) | null = null;
+  private deviceService = inject(DeviceService);
+
 
   constructor(
     private el: ElementRef,
     private ngZone: NgZone,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private renderer: Renderer2
   ) {}
 
   ngAfterViewInit() {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    this.cardElement = this.el.nativeElement.querySelector('.skill-card');
-    if (!this.cardElement) return;
+    // Hover effect disabled on mobile devices
+    if (this.deviceService.isMobile()){
+      const options = {
+        root: null,
+        rootMargin: '-40% 0px -40% 0px',
+        threshold: 0
+      };
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            this.renderer.addClass(entry.target, 'animate_skillcard');
+          }else{
+            this.renderer.removeClass(entry.target, 'animate_skillcard');
+          }
+        });
+      }, options);
 
-    this.ngZone.runOutsideAngular(() => {
-      this.boundMouseMove = this.handleMouseMove.bind(this);
-      this.boundMouseLeave = this.handleMouseLeave.bind(this);
+      this.skillCards.forEach((card) => {
+        observer.observe(card.nativeElement);
+      });
+      return;
+    }
+    else{
+      this.cardElement = this.el.nativeElement.querySelector('.skill-card');
+      if (!this.cardElement) return;
+      this.ngZone.runOutsideAngular(() => {
+        this.boundMouseMove = this.handleMouseMove.bind(this);
+        this.boundMouseLeave = this.handleMouseLeave.bind(this);
 
-      this.cardElement?.addEventListener('mousemove', this.boundMouseMove);
-      this.cardElement?.addEventListener('mouseleave', this.boundMouseLeave);
-    });
+        this.cardElement?.addEventListener('mousemove', this.boundMouseMove);
+        this.cardElement?.addEventListener('mouseleave', this.boundMouseLeave);
+      });
+    }
   }
 
   ngOnDestroy() {

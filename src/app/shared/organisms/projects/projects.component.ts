@@ -1,4 +1,4 @@
-import { Component , inject, ViewChild, ElementRef, Renderer2, QueryList, ViewChildren} from '@angular/core';
+import { Component , inject, ElementRef, Renderer2, QueryList, ViewChildren} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionTitleComponent } from '../../atoms/section-title/section-title.component';
 import { DeviceService } from '../../../core/services/device.service';

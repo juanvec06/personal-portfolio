@@ -94,3 +94,33 @@
         }
     }
 }
+.animate_skillcard{
+    box-shadow: 
+        0 8px 25px rgba(0, 0, 0, 0.3),
+        0 0 30px rgba(var(--glow-color), 0.2);
+
+    &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        padding: 4px;
+        background: conic-gradient(
+            from var(--angle),
+            transparent 40%,
+            rgba(var(--glow-color), 1)
+        );
+        border-radius: inherit;
+        -webkit-mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask:
+            linear-gradient(#fff 0 0) content-box,
+            linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        pointer-events: none;
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        z-index: 1;
+    }
+}
