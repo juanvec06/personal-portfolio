@@ -7,6 +7,7 @@ interface Project {
   title: string;
   description: string;
   Url: string;
+  imageLocation: string;
 }
 interface Star {
   top: number;
@@ -39,23 +40,21 @@ export class ProjectsComponent {
   projects: Project[] = [
     {
       title: 'Appointments and administrative utilities Manager System',
-      description: 'Complete application for appointment management and administrative utilities developed with Angular and Spring Boot. It features user authentication, role-based access control, and a responsive design for optimal performance across devices.',
-      Url: "https://github.com/juanvec06/api-gateway-barbershop"
+      description: 'Developed as an academic project, this application manages appointments and administrative tasks for barbershops. Built with Angular and Spring Boot, it features user authentication, role-based access control, and a responsive design for optimal performance across devices.',
+      Url: "https://github.com/juanvec06/api-gateway-barbershop",
+      imageLocation: 'assets/appointment-management-image.webp'
     },
     {
       title: 'Personal Portfolio',
-      description: 'Personal Portfolio Website Designed and engineered a high-performance personal website using Angular and TypeScript to showcase technical expertise and project milestones.',
-      Url: "https://carlosmario.vercel.app/"
+      description: 'Personal Portfolio Website, i engineered a personal website using Angular and TypeScript to showcase technical expertise and project milestones.',
+      Url: "https://juandavidvelacoronado.vercel.app/",
+      imageLocation: 'assets/portfolio-image.webp'
     },
     {
       title: 'Academic Project Management System',
-      description: 'microservices-based platform designed to streamline the management of academic projects by facilitating collaboration between students, companies, and coordinators. It was an academic project developed using Java with Spring Boot for the backend and Java Swing for the frontend.',
-      Url: "https://github.com/paulamunoz06/GestionProyectosMicro/tree/main"
-    },
-    {
-      title: 'Spotify Clone',
-      description: 'Project that simulates the main functionalities of Spotify using Golang and Java for the backend and HTML/CSS/JavaScript for the frontend, it uses Rest API, websockets and GRPC for communication between services.',
-      Url: "https://github.com/juanvec06/SpotifyFake2.0",
+      description: 'Developed as an academic project, this microservices-based platform is designed to streamline the management of academic projects by facilitating collaboration between students, companies, and coordinators. It was developed using Java with Spring Boot for the backend and Java Swing for the frontend.',
+      Url: "https://github.com/paulamunoz06/GestionProyectosMicro/tree/main",
+      imageLocation: 'assets/project-management-image.webp'
     }
   ];
 

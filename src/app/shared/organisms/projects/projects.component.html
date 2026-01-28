@@ -28,6 +28,9 @@
               <button #projectCard class="timeline-content" (click)="openProjectLink(project.Url)">
                   <h3 class="project-title">{{ project.title }}</h3>
                   <p class="project-description">{{ project.description }}</p>
+                  <div class="project-image-container">
+                      <img [src]="project.imageLocation" alt="{{ project.title }} image" class="project-image">
+                  </div>
               </button>
           </div>
         </div>

@@ -98,7 +98,7 @@
   }
 
   .inspect {
-    color:#007bff
+    color:#007bff;
   }
 
   .project-description {
@@ -108,7 +108,19 @@
     position: relative; /* Asegura que el texto esté por encima */
     z-index: 2;
   }
-
+  .project-image-container {
+    margin-top: 1rem;
+    text-align: center;
+    position: relative; /* Asegura que el contenedor esté por encima */
+    z-index: 2;
+    .project-image {
+      max-width: 600px;
+      width: 100%;
+      height: auto;
+      border-radius: 2rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
   //TODO: Solo se activa hover cuando estamos en dispositivos pointer: fine
 
   /* CAPA DEL MEDIO: El fondo de la tarjeta (::after) */
@@ -189,5 +201,20 @@
   }
   to {
     --angle: 360deg;
+  }
+}
+
+/* Responsive Font Sizes */
+@media (max-width: 576px) {
+  .project-description {
+    font-size: 0.8rem !important; 
+  }
+}
+@media (min-width: 1200px){
+  .project-title {
+    font-size: 2rem !important;
+  }
+  .project-description {
+    font-size: 1.3rem !important;
   }
 }
