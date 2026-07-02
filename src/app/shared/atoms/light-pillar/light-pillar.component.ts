@@ -16,7 +16,7 @@ import {
 import { ThemeService } from '../../../core/services/theme.service';
 
 // Configuración de calidad para diferentes dispositivos
-type QualityLevel = 'low' | 'medium' | 'high';
+type QualityLevel = 'low' | 'medium';
 
 interface QualitySettings {
   iterations: number;
@@ -29,8 +29,7 @@ interface QualitySettings {
 
 const QUALITY_PRESETS: Record<QualityLevel, QualitySettings> = {
   low: { iterations: 24, waveIterations: 1, pixelRatio: 0.5, precision: 'mediump', stepMultiplier: 1.5, targetFPS: 30 },
-  medium: { iterations: 40, waveIterations: 2, pixelRatio: 0.65, precision: 'mediump', stepMultiplier: 1.2, targetFPS: 60 },
-  high: { iterations: 80, waveIterations: 4, pixelRatio: 2, precision: 'highp', stepMultiplier: 1.0, targetFPS: 60 }
+  medium: { iterations: 40, waveIterations: 2, pixelRatio: 0.65, precision: 'mediump', stepMultiplier: 1.2, targetFPS: 60 }
 };
 
 @Component({
@@ -78,7 +77,7 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   @Input() noiseIntensity = 0.5;
   @Input() mixBlendMode = 'screen';
   @Input() pillarRotation = 0;
-  @Input() quality: QualityLevel = 'high'; // Nueva prop para controlar calidad
+  @Input() quality: QualityLevel = 'medium'; // Nueva prop para controlar calidad
 
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
 
@@ -96,13 +95,17 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   private mouse = new Vector2(0, 0);
   private time = 0;
   private resizeObserver: ResizeObserver | null = null;
-  // Nombres actualizados para coincidir con las variables del shader optimizado (d, bound)
+  // Observador de visibilidad: pausa el render cuando el pilar sale del viewport
+  private intersectionObserver: IntersectionObserver | null = null;
+  // Estado de la puerta de renderizado (solo animamos si está en pantalla Y la pestaña activa)
+  private isIntersecting = true;
+  private isPageVisible = true;
+  // Nombres actualizados para coincidir con las variables del shader optimizado (d, bound), por defecto esta en "modo oscuro"
   private configurationTheme = 'blendMax(bound, d, 1.0)';
   private isViewInitialized = false;
   
   // Nuevas propiedades para optimización
-  private effectiveQuality: QualityLevel = 'high';
-  private qualitySettings: QualitySettings = QUALITY_PRESETS.high;
+  private qualitySettings: QualitySettings = QUALITY_PRESETS.medium;
   private lastFrameTime = 0;
   private frameTime = 1000 / 60;
   private mouseMoveThrottleId: number | null = null;
@@ -112,13 +115,19 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   private waveSin = Math.sin(0.4);
   private waveCos = Math.cos(0.4);
 
+  /**
+   * 
+   * @param platformId Se usa para identificar si se esta corriendo en un navegador, es un valor que por defecto es inyectado
+   * @param ngZone Se usa para correr el bucle de animación fuera de Angular y evitar detecciones de cambios innecesarias
+   */
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private ngZone: NgZone
   ) {
     try {
+      // Efecto reactivo para actualizar la configuración del shader según el tema actual
       effect(() => {
-        const theme = this.themeService.theme();
+        const theme = this.themeService.theme(); // Esta es la señal
         // Nombres actualizados: bound (antes radialBound), d (antes fieldDistance)
         if (theme === 'dark') {
           this.configurationTheme = 'blendMax(bound, d, 1.0)';
@@ -127,6 +136,7 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
         }
 
         if (this.isViewInitialized && this.webGLSupported && isPlatformBrowser(this.platformId)) {
+          // Usamos esto para re-inicializar Three.js con la nueva configuración del shader sin destruir el contexto WebGL fuera de Angular para una mejor optimizacion
           this.ngZone.runOutsideAngular(() => {
             try {
               this.cleanup();
@@ -143,7 +153,9 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       this.webGLSupported = false;
     }
   }
-
+  /**
+   * Inicializa el componente, verifica si WebGL está soportado en el navegador y cambia configuraciones del shader dependiendo del dispositivo que esté utilizando usando 'detectDeviceCapabilities()'.
+   */
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       try {
@@ -170,25 +182,16 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
    */
   private detectDeviceCapabilities() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isLowEndDevice = isMobile || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
-    
-    // Ajustar calidad según el dispositivo
+
+    // Solo usamos los presets 'low' y 'medium'. En móvil forzamos 'low'
+    // para reducir la carga de GPU; en escritorio se mantiene la calidad solicitada.
     let effectiveQuality = this.quality;
-    if (isLowEndDevice && this.quality === 'high') {
-      effectiveQuality = 'medium';
-    }
     if (isMobile && this.quality !== 'low') {
       effectiveQuality = 'low';
     }
-    
-    this.effectiveQuality = effectiveQuality;
+
     this.qualitySettings = { ...QUALITY_PRESETS[effectiveQuality] };
-    
-    // Ajustar pixel ratio dinámicamente para calidad alta
-    if (effectiveQuality === 'high') {
-      this.qualitySettings.pixelRatio = Math.min(window.devicePixelRatio, 2);
-    }
-    
+
     // Calcular frame time según FPS objetivo
     this.frameTime = 1000 / this.qualitySettings.targetFPS;
   }
@@ -220,6 +223,9 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
 
     try {
       this.initThree();
+      // Activar la puerta de visibilidad una sola vez (el contenedor persiste
+      // aunque se reinicie Three.js al cambiar de tema).
+      this.setupVisibilityGating();
     } catch (error) {
       console.warn('Error initializing Three.js in ngAfterViewInit:', error);
       this.webGLSupported = false;
@@ -228,6 +234,66 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
 
   ngOnDestroy() {
     this.cleanup();
+    this.teardownVisibilityGating();
+  }
+
+  /**
+   * Configura la pausa/reanudación del render según la visibilidad:
+   * - IntersectionObserver: pausa cuando el pilar sale del viewport.
+   * - visibilitychange: pausa cuando la pestaña pasa a segundo plano.
+   * Así la GPU solo trabaja mientras el héroe está realmente a la vista.
+   */
+  private setupVisibilityGating() {
+    const container = this.containerRef?.nativeElement;
+    if (!container) return;
+
+    this.intersectionObserver = new IntersectionObserver((entries) => {
+      this.isIntersecting = entries[0]?.isIntersecting ?? true;
+      this.updateRenderLoop();
+    }, { threshold: 0 });
+    this.intersectionObserver.observe(container);
+
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
+  }
+
+  private teardownVisibilityGating() {
+    if (this.intersectionObserver) {
+      this.intersectionObserver.disconnect();
+      this.intersectionObserver = null;
+    }
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+  }
+
+  private handleVisibilityChange = () => {
+    this.isPageVisible = !document.hidden;
+    this.updateRenderLoop();
+  };
+
+  /**
+   * Arranca o detiene el bucle de render según el estado de visibilidad,
+   * sin destruir ni reconstruir el contexto WebGL (reanudación instantánea).
+   */
+  private updateRenderLoop() {
+    if (this.isIntersecting && this.isPageVisible) {
+      this.startAnimation();
+    } else {
+      this.stopAnimation();
+    }
+  }
+
+  private startAnimation() {
+    // Evitar programar el RAF más de una vez.
+    if (this.rafId !== null) return;
+    if (!this.material || !this.renderer || !this.scene || !this.camera) return;
+    this.lastFrameTime = performance.now();
+    this.ngZone.runOutsideAngular(() => this.animate(performance.now()));
+  }
+
+  private stopAnimation() {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
   }
 
   private initThree() {
@@ -241,13 +307,13 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
 
     try {
       this.renderer = new WebGLRenderer({
-        antialias: false,
-        alpha: true,
-        // Usar low-power en calidades bajas para ahorrar batería
-        powerPreference: this.effectiveQuality === 'high' ? 'high-performance' : 'low-power',
+        antialias: false, // Antialiasing
+        alpha: true, // Transparencia
+        // Solo usamos presets 'low'/'medium', por lo que priorizamos ahorro de batería
+        powerPreference: 'low-power',
         precision: settings.precision as 'highp' | 'mediump' | 'lowp',
-        stencil: false,
-        depth: false
+        stencil: false, // no entendí que carajos es pero ahorra recursos
+        depth: false // deja de calcular qué objeto está delante de otro en el espacio 3D
       });
     } catch (error) {
       console.error('Failed to create WebGL renderer:', error);
@@ -422,7 +488,9 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     this.resizeObserver = new ResizeObserver(() => this.handleResizeDebounced());
     this.resizeObserver.observe(container);
 
-    this.ngZone.runOutsideAngular(() => this.animate(performance.now()));
+    // Arrancar el bucle solo si el pilar está visible (respeta la puerta de visibilidad).
+    // Al reinicializar por cambio de tema, no se reanuda si el héroe está fuera de pantalla.
+    this.updateRenderLoop();
   }
 
   /**

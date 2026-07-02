@@ -2,7 +2,7 @@
 
 Guidance for Claude Code when working in this repository.
 
-## Project
+## Project overview
 
 Personal portfolio for **Juan David Vela Coronado** (backend developer, frontend
 experience). Single-page marketing site. Live at
@@ -82,3 +82,13 @@ zone). Key facts:
 - Keep heavy/browser-only work behind `isPlatformBrowser` and
   `ngZone.runOutsideAngular` (the existing code does this).
 - Assets live in `src/assets` (images are `.webp`; profile is `.png`).
+
+## 1. Management of Doubts and Uncertainty
+- If an instruction is ambiguous, requirements are missing, or you have doubts about the architectural implementation, DO NOT assume the answer or begin programming.
+- Stop the process immediately and ask me a clear and concise question in the terminal to resolve the doubt before proceeding.
+
+## Scope limit
+- You have a strict limit when modifying the code.
+- Before propose or making any change, evaluate the volume of modiying, deleted and added lines of code.
+- If the volume of changes have a big probability of modifying more than 2500 lines of code, DON'T make any changes.
+- Instead, stop the task, explain to me why the change is so massive, and propose a strategy to break the work down into sub-modules or smaller steps of fewer than 2500 lines.

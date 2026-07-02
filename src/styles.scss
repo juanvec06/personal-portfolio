@@ -55,13 +55,10 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   transition: background-color 0.5s, color 0.3s; /* Transición suave al cambiar de tema */
-  animation: rotate 3s linear infinite;
-}
-
-@keyframes rotate {
-  to {
-    --angle: 360deg;
-  }
+  /* Nota: la animación global de --angle sobre el body se eliminó por rendimiento.
+     Al ser --angle una custom property con inherits:true, animarla en el body forzaba
+     un recálculo de estilos de todo el árbol DOM en cada frame. El anillo giratorio del
+     perfil ya se anima por su cuenta vía la animación `spin` en .profile-container::before. */
 }
 
 /* Activa el desplazamiento suave para toda la aplicación */
