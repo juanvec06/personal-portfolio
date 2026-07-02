@@ -8,16 +8,18 @@ import { MobileMenuComponent } from '../mobile-menu/mobile-menu.component';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, ThemeToggleComponent, SocialButtonComponent, MobileMenuComponent],
+  imports: [CommonModule, ThemeToggleComponent, SocialButtonComponent, MobileMenuComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent {
   // Placeholder image for now
-  profileImage = 'assets/profile2.png';
-  
+  profileImage = 'assets/code.webp';
+  // We use this for the mobile menu to determine if we should show the mobile menu or not
+  isMobileView = window.innerWidth < 768;
+
+  // Logic to handle the mobile menu state with boolean variable and methods to toggle and close the menu
   isMenuOpen = false;
-  isMovileView = window.innerWidth < 768;
 
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;

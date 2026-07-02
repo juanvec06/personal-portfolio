@@ -33,11 +33,9 @@ body.theme-dark .navbar-toggler-icon {
   gap: 0.75rem;
   
   .profile-img {
-    width: 45px;
+    width: 50px;
     height: 45px;
-    border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--primary-color);
   }
   
   .profile-info {

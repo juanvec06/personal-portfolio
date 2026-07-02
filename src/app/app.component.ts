@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/organisms/navbar/navbar.component';
 import { HomeComponent } from './shared/organisms/home/home.component';
 import { ProjectsComponent } from './shared/organisms/projects/projects.component';
@@ -10,7 +9,8 @@ import { FooterComponent } from './shared/organisms/footer/footer.component';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, HomeComponent, ProjectsComponent, AboutMeComponent, SkillsComponent, FooterComponent],
+  // Cause it's a single page application, we can import all the components here and use them in the template
+  imports: [NavbarComponent, HomeComponent, ProjectsComponent, AboutMeComponent, SkillsComponent, FooterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
