@@ -12,12 +12,15 @@
                 </app-light-pillar>
             </div>
             <div class="pillar-background" *ngIf="currentTheme() === 'light'">
-                <app-light-pillar 
-                    [interactive]="false" 
+                <app-light-pillar
+                    [quality]="'medium'"
+                    [interactive]="false"
                     [topColor]="'#4BB849'"
                     [bottomColor]="'#8BC4AA'"
-                    [intensity]="3.0"
-                    [pillarRotation]="260">
+                    [intensity]="0.9"
+                    [pillarRotation]="60"
+                    [lightMode]="true"
+                    [mixBlendMode]="'normal'">
                 </app-light-pillar>
             </div>
         }

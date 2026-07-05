@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, AfterViewInit, NgZone, PLATFORM_ID, Inject, OnChanges, SimpleChanges, inject, effect } from '@angular/core';
+import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, AfterViewInit, NgZone, PLATFORM_ID, Inject, OnChanges, SimpleChanges } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 import { 
@@ -10,10 +10,8 @@ import {
   Vector3,
   Color, 
   PlaneGeometry, 
-  Mesh 
+  Mesh
 } from 'three';
-
-import { ThemeService } from '../../../core/services/theme.service';
 
 // Configuración de calidad para diferentes dispositivos
 type QualityLevel = 'low' | 'medium';
@@ -78,10 +76,17 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   @Input() mixBlendMode = 'screen';
   @Input() pillarRotation = 0;
   @Input() quality: QualityLevel = 'medium'; // Nueva prop para controlar calidad
+  // Forma del pilar: 'max' = intersección suave (aspecto filamentoso, "modo oscuro"),
+  // 'min' = unión suave (aspecto más sólido). Antes se derivaba del tema; ahora es un input
+  // para que ambos temas puedan compartir la misma forma. Ver blendMax/blendMin en el shader.
+  @Input() blendMode: 'max' | 'min' = 'max';
+  // Modo claro ("tinta sobre papel"): en lugar de un pilar aditivo brillante sobre
+  // fondo negro OPACO (que en una página clara se ve como un rectángulo negro), el
+  // shader pinta un fondo TRANSPARENTE y usa el brillo del pilar como alpha para
+  // dibujar una "tinta" de color oscuro. Así la página clara se ve a través.
+  @Input() lightMode = false;
 
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
-
-  public themeService = inject(ThemeService);
 
   webGLSupported = true;
   
@@ -100,9 +105,6 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   // Estado de la puerta de renderizado (solo animamos si está en pantalla Y la pestaña activa)
   private isIntersecting = true;
   private isPageVisible = true;
-  // Nombres actualizados para coincidir con las variables del shader optimizado (d, bound), por defecto esta en "modo oscuro"
-  private configurationTheme = 'blendMax(bound, d, 1.0)';
-  private isViewInitialized = false;
   
   // Nuevas propiedades para optimización
   private qualitySettings: QualitySettings = QUALITY_PRESETS.medium;
@@ -123,36 +125,7 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private ngZone: NgZone
-  ) {
-    try {
-      // Efecto reactivo para actualizar la configuración del shader según el tema actual
-      effect(() => {
-        const theme = this.themeService.theme(); // Esta es la señal
-        // Nombres actualizados: bound (antes radialBound), d (antes fieldDistance)
-        if (theme === 'dark') {
-          this.configurationTheme = 'blendMax(bound, d, 1.0)';
-        } else {
-          this.configurationTheme = 'blendMin(bound, d, 1.0)';
-        }
-
-        if (this.isViewInitialized && this.webGLSupported && isPlatformBrowser(this.platformId)) {
-          // Usamos esto para re-inicializar Three.js con la nueva configuración del shader sin destruir el contexto WebGL fuera de Angular para una mejor optimizacion
-          this.ngZone.runOutsideAngular(() => {
-            try {
-              this.cleanup();
-              this.initThree();
-            } catch (error) {
-              console.warn('Error re-initializing Three.js:', error);
-              this.webGLSupported = false;
-            }
-          });
-        }
-      });
-    } catch (error) {
-      console.warn('Error in LightPillarComponent constructor:', error);
-      this.webGLSupported = false;
-    }
-  }
+  ) {}
   /**
    * Inicializa el componente, verifica si WebGL está soportado en el navegador y cambia configuraciones del shader dependiendo del dispositivo que esté utilizando usando 'detectDeviceCapabilities()'.
    */
@@ -218,7 +191,6 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   }
 
   ngAfterViewInit() {
-    this.isViewInitialized = true;
     if (!this.webGLSupported || !isPlatformBrowser(this.platformId)) return;
 
     try {
@@ -301,6 +273,11 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     const width = container.clientWidth;
     const height = container.clientHeight;
     const settings = this.qualitySettings;
+    // La forma del pilar se hornea en el código fuente del shader (no es un uniform),
+    // por eso se decide aquí a partir del input blendMode.
+    const blendExpr = this.blendMode === 'max'
+      ? 'blendMax(bound, d, 1.0)'
+      : 'blendMin(bound, d, 1.0)';
 
     this.scene = new Scene();
     this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -349,6 +326,7 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       uniform float uPillarWidth;
       uniform float uPillarHeight;
       uniform float uNoiseIntensity;
+      uniform bool uLightMode;
       // Valores precalculados de sin/cos para evitar cálculos en el shader
       uniform float uRotCos;
       uniform float uRotSin;
@@ -415,9 +393,7 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
           
           float d = length(cos(q.xz)) - 0.2;
           float bound = length(p.xz) - uPillarWidth;
-          float k = 4.0;
-          float h = max(k - abs(d - bound), 0.0);
-          d = ${this.configurationTheme};
+          d = ${blendExpr};
           d = abs(d) * 0.15 + 0.01;
 
           // Gradiente simplificado
@@ -434,8 +410,20 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
         
         // Ruido simplificado
         col -= fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) / 15.0 * uNoiseIntensity;
-        
-        gl_FragColor = vec4(col * uIntensity, 1.0);
+
+        if (uLightMode) {
+          // MODO CLARO ("tinta sobre papel"): fondo TRANSPARENTE, pilar de color oscuro.
+          // 'lum' = brillo del pilar (0 donde no hay pilar). Lo usamos como alpha, así el
+          // fondo queda transparente y la página clara se ve a través: NO hay rectángulo
+          // negro. El color 'ink' sigue un degradado vertical entre bottom/top (verdes
+          // oscuros pasados por input) para verse como una silueta impresa sobre el papel.
+          float lum = clamp(max(max(col.r, col.g), col.b), 0.0, 1.0);
+          vec3 ink = mix(uBottomColor, uTopColor, clamp(vUv.y, 0.0, 1.0));
+          gl_FragColor = vec4(ink, lum * uIntensity);
+        } else {
+          // MODO OSCURO: pilar aditivo brillante sobre fondo negro opaco.
+          gl_FragColor = vec4(col * uIntensity, 1.0);
+        }
       }
     `;
 
@@ -461,6 +449,7 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
         uPillarWidth: { value: this.pillarWidth },
         uPillarHeight: { value: this.pillarHeight },
         uNoiseIntensity: { value: this.noiseIntensity },
+        uLightMode: { value: this.lightMode },
         // Valores precalculados - evita cálculos de sin/cos en el shader
         uRotCos: { value: 1.0 },
         uRotSin: { value: 0.0 },
