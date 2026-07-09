@@ -1,4 +1,15 @@
 <div class="about-me-wrapper">
+    <div class="stars-container">
+      <div *ngFor="let star of stars" 
+          class="star" 
+          [style.top.%]="star.top" 
+          [style.left.%]="star.left" 
+          [style.width.px]="star.size" 
+          [style.height.px]="star.size"
+          [style.animation-delay.s]="star.delay"
+          [style.animation-duration.s]="star.duration">
+      </div>
+    </div>
     <section class="about-me-section" id="section-about">
         <div class="row">
             <app-section-title class="col-12">About Me</app-section-title>
@@ -7,7 +18,7 @@
             <div class="col-12 col-lg-4 image-container order-2 order-lg-1">
                 <img [ngSrc]="profileImage()" alt="Photo of me" width="400" height="400" priority>
             </div>
-            <div class="text col-12 col-lg-8 order-1 order-lg-2 text-center text-lg-start">
+            <div class="text col-12 col-lg-7 order-1 order-lg-2 text-center text-lg-start">
                 <p class="description">
                     I am an {{ semester }}-semester Systems Engineering student at the University of Cauca with {{ age }} years old, currently ranked among the top students of my cohort. I am highly motivated by backend development, with a strong focus on building robust and scalable solutions using Spring Boot and Python.
                 </p>

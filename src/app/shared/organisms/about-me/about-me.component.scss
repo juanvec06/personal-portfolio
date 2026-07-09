@@ -4,7 +4,24 @@
   color: var(--text-color, #333);
   position: relative;
   overflow: hidden;
+  .stars-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+  }
 
+  .star {
+      position: absolute;
+      background-color: var(--text-color);
+      border-radius: 50%;
+      opacity: 0;
+      box-shadow: 0 0 4px var(--text-color);
+      animation: twinkle infinite ease-in-out;
+  }
   .about-me-section {
     padding-top: 4rem;
   position: relative;
@@ -19,12 +36,48 @@
         line-height: 1.6;
       .image-container {
         text-align: center;
+        position: relative;
+        isolation: isolate;
+        border-radius: 10%;
+        padding: 0rem;
+        margin:0rem 1rem;
         img {
           max-width: 100%;
           width: 100%;
+          height: 100%;
           object-fit: cover;
+          display: block;
+          border-radius: 10%; /* Mismo radio que el contenedor: las esquinas ya no sobresalen */
+          position: relative; /* Asegura que la imagen quede por encima */
+          z-index: 2;
+        }
+
+        /* CAPA DEL MEDIO: fondo sólido detrás de la imagen */
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-color: var(--background-color, #f5f5f5);
           border-radius: 10%;
-          border: 3px solid var(--primary-color, #007bff);
+          z-index: -1;
+        }
+
+        /* CAPA DEL FONDO: borde animado que aparece en hover */
+        &::before {
+          content: '';
+          position: absolute;
+          inset: -4px;
+          background-image: conic-gradient(from var(--angle), #ff4545, #00ff99, #006aff, #ff0095, #ff4545);
+          z-index: -2;
+          border-radius: 10%; /* Sigue la misma curva que la imagen para que el glow la abrace */
+          animation: 3s spin linear infinite;
+          filter: blur(10px);
+          opacity: 1;
+          transition: ease 0.3s;
+        }
+
+        &:hover::before {
+          opacity: 0.8;
         }
       }
 
@@ -81,6 +134,21 @@
           }
         }
     }
+  }
+}
+
+@keyframes twinkle {
+    0% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(0.5); }
+}
+
+@keyframes spin {
+  from {
+    --angle: 0deg;
+  }
+  to {
+    --angle: 360deg;
   }
 }
 
