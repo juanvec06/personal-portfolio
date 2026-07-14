@@ -1,39 +1,59 @@
-<div class="projects-section" id="section-projects">
-  <!-- Stars Background (solo en desktop) -->
-  <div class="stars-container">
-      <div *ngFor="let star of stars" 
-          class="star" 
-          [style.top.%]="star.top" 
-          [style.left.%]="star.left" 
-          [style.width.px]="star.size" 
+<section class="projects-section" id="section-projects" [class.is-mobile]="isMobile()">
+
+  <!-- Panel que se fija (pin) mientras se hace scroll -->
+  <div #pinned class="projects-pinned">
+
+    <!-- Fondo de estrellas (a sangre completa) -->
+    <div class="stars-container">
+      <div *ngFor="let star of stars"
+          class="star"
+          [style.top.%]="star.top"
+          [style.left.%]="star.left"
+          [style.width.px]="star.size"
           [style.height.px]="star.size"
           [style.animation-delay.s]="star.delay"
           [style.animation-duration.s]="star.duration">
       </div>
-  </div>
-  <div class="timeline">
-    <div class="row">
-      <div class="col-4">
-        <app-section-title>Projects</app-section-title>
-      </div>
     </div>
-    <div class="timeline-item" *ngFor="let project of projects; let last = last; let first = first">
-        <div class="row">
-            <div class="timeline-marker col-2">
-                <div class="line" [style.visibility]="first ? 'hidden' : 'visible'"></div>
-                <div class="ball"></div>
-                <div class="line" [style.visibility]="last ? 'hidden' : 'visible'"></div>
-            </div>
-          <div class="col-10">
-              <button #projectCard class="timeline-content" (click)="openProjectLink(project.Url)">
-                  <h3 class="project-title">{{ project.title }}</h3>
-                  <p class="project-description">{{ project.description }}</p>
-                  <div class="project-image-container">
-                      <img [src]="project.imageLocation" alt="{{ project.title }} image" class="project-image">
-                  </div>
-              </button>
+
+    <!-- Contenido centrado, misma estructura que las demás secciones -->
+    <div class="container projects-inner">
+      <app-section-title>Projects</app-section-title>
+
+      <div class="split-row">
+        <!-- IZQUIERDA: secuencia de imágenes controlada por scroll -->
+        <div class="sequence-side">
+          <canvas #sequenceCanvas class="sequence-canvas"></canvas>
+          <!-- Suelo: el árbol se apoya sobre esta línea -->
+          <div class="floor-line"></div>
+        </div>
+
+        <!-- DERECHA: pila de tarjetas de proyecto -->
+        <div class="cards-side">
+          <div class="cards-stack">
+            <button #projectCard
+                *ngFor="let project of projects; let i = index"
+                class="timeline-content project-card"
+                [class.active]="i === activeIndex()"
+                [class.is-past]="i < activeIndex()"
+                (click)="openProjectLink(project.Url)">
+              <h3 class="project-title">{{ project.title }}</h3>
+              <p class="project-description">{{ project.description }}</p>
+              <div class="project-image-container">
+                <img [src]="project.imageLocation" alt="{{ project.title }} image" class="project-image">
+              </div>
+            </button>
+          </div>
+
+          <!-- Indicador de progreso (qué proyecto se muestra) -->
+          <div class="progress-dots">
+            <span *ngFor="let project of projects; let i = index"
+                class="dot"
+                [class.active]="i === activeIndex()"></span>
           </div>
         </div>
+      </div>
     </div>
+
   </div>
-</div>
+</section>

@@ -1,216 +1,253 @@
-
 .projects-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 4rem 2rem;
-  background-color: var(--background-color, #f5f5f5);
-  color: var(--text-color, #333);
   position: relative;
-  overflow: hidden;
+  background-color: var(--background-color);
+  color: var(--text-color);
 
+  /* Panel que GSAP fija (pin). Ocupa la pantalla; el fondo va a sangre completa. */
+  .projects-pinned {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+    padding: 4rem 2rem;
+    background-color: var(--background-color);
+  }
+
+  /* Contenido centrado: mismo shell (max-width 1200) que Skills/About-Me. */
+  .projects-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* -------- Fondo de estrellas -------- */
   .stars-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
   }
-
   .star {
-      position: absolute;
-      background-color: var(--text-color);
+    position: absolute;
+    background-color: var(--text-color);
+    border-radius: 50%;
+    opacity: 0;
+    box-shadow: 0 0 4px var(--text-color);
+    animation: twinkle infinite ease-in-out;
+  }
+
+  /* -------- Fila dividida: izquierda secuencia / derecha tarjetas -------- */
+  .split-row {
+    flex: 1;
+    min-height: 0;
+    margin-top: 1rem;
+    display: flex;
+    gap: 2rem;
+  }
+
+  .sequence-side {
+    flex: 1 1 50%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sequence-canvas {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+  }
+  /* Suelo bajo el canvas: el árbol (anclado abajo) se apoya aquí. */
+  .floor-line {
+    flex: none;
+    height: 2px;
+    background-color: var(--text-color);
+  }
+
+  .cards-side {
+    flex: 1 1 50%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .cards-stack {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Cada tarjeta se apila en el centro; solo la activa es visible. */
+  .project-card {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    transform: translateY(-50%) translateY(45px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.55s ease, transform 0.55s ease;
+
+    &.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(-50%);
+    }
+    &.is-past {
+      transform: translateY(-50%) translateY(-45px);
+    }
+  }
+
+  /* Indicador de progreso */
+  .progress-dots {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 2rem;
+
+    .dot {
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      opacity: 0;
-      box-shadow: 0 0 4px var(--text-color);
-      animation: twinkle infinite ease-in-out;
+      background-color: var(--border-color);
+      transition: 0.3s ease;
+
+      &.active {
+        background-color: var(--primary-color);
+        box-shadow: 0 0 10px var(--primary-color);
+        transform: scale(1.3);
+      }
+    }
   }
 }
 
-@keyframes twinkle {
-    0% { opacity: 0; transform: scale(0.5); }
-    50% { opacity: 1; transform: scale(1.2); }
-    100% { opacity: 0; transform: scale(0.5); }
-}
-
-.timeline {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.timeline-item {
-  display:grid;
-  gap: 1.5rem;
-  align-items: center;
-}
-
-.timeline-marker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 30px; // Ensure space for the ball
-}
-
-
-
-.ball {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: var(--primary-color, #007bff);
-  margin: 5px; // Align with the title text roughly
-  flex-shrink: 0;
-  box-shadow: 0 0 10px var(--primary-color, #007bff);
-}
-
-.line {
-  width: 2px;
-  background-color: var(--primary-color, #007bff);
-  flex-grow: 1;
-
-  min-height: 50px; // Minimum height for the line
-
-  &:first-child {
-    flex-basis: 2rem;
-    min-height: calc(50px + 2rem);
-  }
-}
-
+/* ================= Tarjeta (borde animado en hover, reutilizado) ================= */
 .timeline-content {
   text-align: start;
-  margin-top: 2rem;
-  padding: 1rem;
+  padding: 1.25rem;
   border-radius: 10px;
   position: relative;
   background-color: transparent;
-  border:var(--border-color) 2px solid;
-  isolation: isolate; 
+  border: var(--border-color) 2px solid;
+  isolation: isolate;
+  cursor: pointer;
 
   .project-title {
     margin: 0 0 1rem 0;
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--text-muted-color);
-    position: relative; /* Asegura que el texto esté por encima */
+    position: relative;
     z-index: 2;
-  }
-
-  .inspect {
-    color:#007bff;
   }
 
   .project-description {
     margin: 0;
-    color: var(--text-color, #666);
-    line-height: 1.5; 
-    position: relative; /* Asegura que el texto esté por encima */
+    color: var(--text-color);
+    line-height: 1.5;
+    position: relative;
     z-index: 2;
   }
+
   .project-image-container {
     margin-top: 1rem;
     text-align: center;
-    position: relative; /* Asegura que el contenedor esté por encima */
+    position: relative;
     z-index: 2;
     .project-image {
-      max-width: 600px;
       width: 100%;
       height: auto;
-      border-radius: 2rem;
+      border-radius: 1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
   }
-  //TODO: Solo se activa hover cuando estamos en dispositivos pointer: fine
+}
 
-  /* CAPA DEL MEDIO: El fondo de la tarjeta (::after) */
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0; /* Ocupa el 100% del espacio del padre */
-    background-color: var(--background-color, #f5f5f5); /* AQUÍ va el color de fondo */
-    border-radius: 10px; /* Mismo radio que el padre */
-    z-index: -1; /* Se pone detrás del texto */
-  }
+/* Fondo sólido + borde animado, compartidos por hover (escritorio) y .efecto-hover (móvil). */
+.timeline-content::after,
+.efecto-hover::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--background-color);
+  border-radius: 10px;
+  z-index: -1;
+}
+.timeline-content::before,
+.efecto-hover::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background-image: conic-gradient(from var(--angle), #ff4545, #00ff99, #006aff, #ff0095, #ff4545);
+  z-index: -2;
+  border-radius: 14px;
+  animation: 3s spin linear infinite;
+  filter: blur(10px);
+  opacity: 0;
+  transition: ease 0.3s;
+}
+.timeline-content:hover::before,
+.efecto-hover::before {
+  opacity: 0.8;
+}
 
-  /* CAPA DEL FONDO: El borde animado (::before) */
-  &::before {
-    content: '';
-    position: absolute;
-    
-    /* Hacemos que sobresalga 4px por cada lado */
-    inset: -4px; 
-    
-    /* El gradiente */
-    background-image: conic-gradient(from var(--angle), #ff4545, #00ff99, #006aff, #ff0095, #ff4545);
-    
-    /* Se pone detrás del fondo solido (::after) */
-    z-index: -2; 
-    
-    /* Radio un poco mayor para que se vea bien la curva */
-    border-radius: 14px; 
-    animation: 3s spin linear infinite;
-    
-    /* Opcional: una sombra suave del mismo color para efecto neón */
-    filter: blur(10px);
-    opacity: 0;
-    transition: ease 0.3s;
+/* ================= Móvil: secuencia como fondo tenue, una tarjeta a la vez ================= */
+.projects-section.is-mobile {
+  .projects-pinned {
+    padding: 3rem 1rem;
   }
-  &:hover::before {
-    opacity: 0.8;
+  .split-row {
+    display: block;
+    position: relative;
+    height: 100%;
+    margin-top: 1rem;
+  }
+  .sequence-side {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .sequence-canvas {
+    opacity: 0.18;
+  }
+  /* La secuencia es solo un fondo tenue: sin suelo. */
+  .floor-line {
+    display: none;
+  }
+  .cards-side {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    justify-content: center;
+  }
+  .progress-dots {
+    justify-content: center;
   }
 }
-.efecto-hover {
-    /* CAPA DEL MEDIO: El fondo de la tarjeta (::after) */
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0; /* Ocupa el 100% del espacio del padre */
-    background-color: var(--background-color, #f5f5f5); /* AQUÍ va el color de fondo */
-    border-radius: 10px; /* Mismo radio que el padre */
-    z-index: -1; /* Se pone detrás del texto */
-  }
 
-  /* CAPA DEL FONDO: El borde animado (::before) */
-  &::before {
-    content: '';
-    position: absolute;
-    
-    /* Hacemos que sobresalga 4px por cada lado */
-    inset: -4px; 
-    
-    /* El gradiente */
-    background-image: conic-gradient(from var(--angle), #ff4545, #00ff99, #006aff, #ff0095, #ff4545);
-    
-    /* Se pone detrás del fondo solido (::after) */
-    z-index: -2; 
-    
-    /* Radio un poco mayor para que se vea bien la curva */
-    border-radius: 14px; 
-    animation: 3s spin linear infinite;
-    
-    /* Opcional: una sombra suave del mismo color para efecto neón */
-    filter: blur(10px);
-    opacity: 0.8;
-    transition: ease 0.3s;
-  }
+@keyframes twinkle {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(0.5); }
 }
+
 @keyframes spin {
-  from {
-    --angle: 0deg;
-  }
-  to {
-    --angle: 360deg;
-  }
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
 }
 
 /* Responsive Font Sizes */
 @media (max-width: 576px) {
   .project-description {
-    font-size: 0.8rem !important; 
+    font-size: 0.8rem !important;
   }
 }
-@media (min-width: 1200px){
+@media (min-width: 1200px) {
   .project-title {
     font-size: 2rem !important;
   }
