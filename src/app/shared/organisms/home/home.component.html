@@ -27,12 +27,13 @@
         <div class="profile-container m-5">
             <img src="assets/profile2.webp" alt="Profile Image" class="home-profile-img">
         </div>
-        <h1 class="home-title">Software Developer</h1>
+        <h1 class="home-title"><app-role-title [words]="['Systems', 'Software', 'Backend']"></app-role-title> Engineer</h1>
         <h3 class="home-subtitle">Juan David Vela Coronado</h3>
-        <p style="color: var(--text-color);" class="mt-4">Backend developer with frontend experience</p>
+        <p style="color: var(--text-color);" class="mt-4">Solid Knowledge of Backend development with some frontend knowledge</p>
         <section class="d-flex m-5" style="gap: 5em;">
             <app-social-button [size]="50" platform="linkedin" href="https://www.linkedin.com/in/juan-david-vela-coronado-a609b7266/"></app-social-button>
             <app-social-button [size]="50" platform="github" href="https://github.com/juanvec06/"></app-social-button>
+            <app-social-button [size]="50" platform="email" href="mailto:spartanjuanv@gmail.com"></app-social-button>
         </section>
     </section>
 </div>

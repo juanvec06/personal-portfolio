@@ -4,6 +4,7 @@ import { SocialButtonComponent } from '../../atoms/social-button/social-button.c
 import { LightPillarComponent } from '../../atoms/light-pillar/light-pillar.component';
 import { ThemeService } from '../../../core/services/theme.service';
 import { DeviceService } from '../../../core/services/device.service';
+import { RoleTitleComponent } from '../../atoms/role-title/role-title.component';
 
 interface Star {
   top: number;
@@ -16,7 +17,7 @@ interface Star {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, SocialButtonComponent, LightPillarComponent],
+  imports: [CommonModule, SocialButtonComponent, LightPillarComponent, RoleTitleComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })

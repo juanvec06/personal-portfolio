@@ -1,0 +1,17 @@
+<span class="role-title" [style.color]="color" [style.fontFamily]="font">
+    <!-- Reserva el ancho/alto de la palabra más larga (no se pinta). -->
+    <span class="sizer" aria-hidden="true">{{ longestWord() }}</span>
+    <!-- Palabra completa para lectores de pantalla: las letras sueltas de abajo
+         van aria-hidden para que no se lean deletreadas. -->
+    <span class="visually-hidden">{{ currentWord() }}</span>
+    <!-- Capa que NO recorta el movimiento vertical. -->
+    <div class="clip" aria-hidden="true">
+        @for (word of [currentWord()]; track word) {
+            <span class="word" [@rollChars]>
+                @for (char of word.split(''); track $index) {
+                    <span class="char">{{ char }}</span>
+                }
+            </span>
+        }
+    </div>
+</span>

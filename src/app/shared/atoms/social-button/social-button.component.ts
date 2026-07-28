@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './social-button.component.scss'
 })
 export class SocialButtonComponent {
-  @Input() platform: 'linkedin' | 'github' = 'github';
+  @Input() platform: 'linkedin' | 'github' | 'email' = 'github';
   @Input() href: string = '#';
   @Input() size: number = 24;
 }

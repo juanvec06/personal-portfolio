@@ -1,0 +1,40 @@
+.role-title {
+    position: relative;
+    display: inline-block;
+    // Color por defecto; se sobreescribe con el input [color].
+    color: var(--contrast-text-color);
+}
+
+// Reserva el espacio de la palabra más larga. Ocupa flujo (define ancho, alto
+// y línea base) pero no se pinta, así el texto contiguo nunca se desplaza.
+.sizer {
+    visibility: hidden;
+}
+
+// Recorta las palabras que entran/salen. Va en una capa absoluta para que el
+// overflow:hidden no cambie la línea base del contenedor inline-block.
+.clip {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+}
+
+// Anclando left y right, la palabra ocupa todo el ancho reservado por .sizer;
+// text-align la centra dentro de ese ancho.
+.word {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    white-space: nowrap;
+}
+
+// Cada letra se anima por separado. inline-block es obligatorio: transform no
+// tiene efecto sobre elementos inline. Al seguir en flujo normal, las letras se
+// acomodan solas una al lado de otra y el text-align del .word las centra.
+.char {
+    display: inline-block;
+    white-space: pre; // conserva los espacios en palabras compuestas
+}
+
