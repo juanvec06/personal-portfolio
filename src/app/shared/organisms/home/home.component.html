@@ -1,17 +1,20 @@
 <div class="home">
-    
+
     <section id="section-home" class="home-section d-flex flex-column justify-content-center align-items-center text-center">
-        <!-- Efecto pillar  -->
+        <!-- Paso 1: el pilar. Avisa con (ready) al pintar su primer frame y
+             .is-visible dispara el fundido sobre el contenedor (no sobre el
+             propio pilar: una opacidad ahí rompería su mix-blend-mode). -->
         @defer (on idle) {
-            <div class="pillar-background" *ngIf="currentTheme() === 'dark'">
+            <div class="pillar-background" [class.is-visible]="pillarReady()" *ngIf="currentTheme() === 'dark'">
                 <app-light-pillar
                     [quality]="'medium'"
                     [interactive]="false"
                     [intensity]="0.8"
-                    [pillarRotation]="60">
+                    [pillarRotation]="60"
+                    (ready)="onPillarReady()">
                 </app-light-pillar>
             </div>
-            <div class="pillar-background" *ngIf="currentTheme() === 'light'">
+            <div class="pillar-background" [class.is-visible]="pillarReady()" *ngIf="currentTheme() === 'light'">
                 <app-light-pillar
                     [quality]="'medium'"
                     [interactive]="false"
@@ -20,20 +23,29 @@
                     [intensity]="0.9"
                     [pillarRotation]="60"
                     [lightMode]="true"
-                    [mixBlendMode]="'normal'">
+                    [mixBlendMode]="'normal'"
+                    (ready)="onPillarReady()">
                 </app-light-pillar>
             </div>
         }
-        <div class="profile-container m-5">
-            <img src="assets/profile2.webp" alt="Profile Image" class="home-profile-img">
-        </div>
-        <h1 class="home-title"><app-role-title [words]="['Systems', 'Software', 'Backend']"></app-role-title> Engineer</h1>
-        <h3 class="home-subtitle">Juan David Vela Coronado</h3>
-        <p style="color: var(--text-color);" class="mt-4">Solid Knowledge of Backend development with some frontend knowledge</p>
-        <section class="d-flex m-5" style="gap: 5em;">
-            <app-social-button [size]="50" platform="linkedin" href="https://www.linkedin.com/in/juan-david-vela-coronado-a609b7266/"></app-social-button>
-            <app-social-button [size]="50" platform="github" href="https://github.com/juanvec06/"></app-social-button>
-            <app-social-button [size]="50" platform="email" href="mailto:spartanjuanv@gmail.com"></app-social-button>
-        </section>
+
+        <!-- Paso 2: el contenido. No existe en el DOM hasta que termina el
+             fundido del pilar; al montarse, cada .anim-item corre su animación
+             CSS con un retraso escalonado (ver home.component.scss). -->
+        @if (contentReady()) {
+            <div class="home-content d-flex flex-column align-items-center text-center">
+                <div class="profile-container m-5 anim-item">
+                    <img src="assets/profile2.webp" alt="Profile Image" class="home-profile-img">
+                </div>
+                <h1 class="home-title anim-item"><app-role-title [words]="['Systems', 'Software', 'Backend']"></app-role-title> Engineer</h1>
+                <h3 class="home-subtitle anim-item">Juan David Vela Coronado</h3>
+                <p style="color: var(--text-color);" class="mt-4 anim-item">Solid Knowledge of Backend development with some frontend knowledge</p>
+                <section class="d-flex m-5 anim-item" style="gap: 5em;">
+                    <app-social-button [size]="50" platform="linkedin" href="https://www.linkedin.com/in/juan-david-vela-coronado-a609b7266/"></app-social-button>
+                    <app-social-button [size]="50" platform="github" href="https://github.com/juanvec06/"></app-social-button>
+                    <app-social-button [size]="50" platform="email" href="mailto:spartanjuanv@gmail.com"></app-social-button>
+                </section>
+            </div>
+        }
     </section>
 </div>

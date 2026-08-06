@@ -295,12 +295,12 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ngZone.runOutsideAngular(() => {
       const pinned = this.pinnedRef?.nativeElement;
       if (!pinned) return;
-
-      if (this.isMobile()) {
-        this.setupMobileSnap(ScrollTrigger);
-      } else {
-        this.setupDesktopScrollJack(ScrollTrigger, Observer);
-      }
+      this.setupMobileSnap(ScrollTrigger);
+      // if (this.isMobile()) {
+      //   this.setupMobileSnap(ScrollTrigger);
+      // } else {
+      //   this.setupDesktopScrollJack(ScrollTrigger, Observer);
+      // }
     });
   }
 

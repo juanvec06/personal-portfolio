@@ -1,4 +1,4 @@
-import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, AfterViewInit, NgZone, PLATFORM_ID, Inject, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, ElementRef, Input, Output, EventEmitter, OnDestroy, OnInit, ViewChild, AfterViewInit, NgZone, PLATFORM_ID, Inject, OnChanges, SimpleChanges } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 import { 
@@ -86,9 +86,22 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   // dibujar una "tinta" de color oscuro. Así la página clara se ve a través.
   @Input() lightMode = false;
 
+  /**
+   * Se emite UNA sola vez, en cuanto el pilar pinta su PRIMER frame (es decir,
+   * cuando ya hay algo real que mostrar). El padre decide qué hacer con ese
+   * aviso; aquí no se anima nada, porque una opacidad en :host crearía un
+   * contexto de apilamiento y rompería el mix-blend-mode del pilar.
+   * Si WebGL no está soportado o falla la inicialización, se emite igual para
+   * no dejar al padre esperando para siempre.
+   */
+  @Output() ready = new EventEmitter<void>();
+
   @ViewChild('container') containerRef!: ElementRef<HTMLDivElement>;
 
   webGLSupported = true;
+
+  // Candado: garantiza que 'ready' se emita una única vez por instancia.
+  private hasEmittedReady = false;
   
   private renderer: WebGLRenderer | null = null;
   private material: ShaderMaterial | null = null;
@@ -191,7 +204,12 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
   }
 
   ngAfterViewInit() {
-    if (!this.webGLSupported || !isPlatformBrowser(this.platformId)) return;
+    if (!this.webGLSupported || !isPlatformBrowser(this.platformId)) {
+      // No habrá pilar que esperar: avisamos de inmediato para que el padre
+      // pueda mostrar su contenido.
+      this.emitReady();
+      return;
+    }
 
     try {
       this.initThree();
@@ -201,7 +219,19 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
     } catch (error) {
       console.warn('Error initializing Three.js in ngAfterViewInit:', error);
       this.webGLSupported = false;
+      this.emitReady();
     }
+  }
+
+  /**
+   * Notifica al padre que el pilar ya pintó su primer frame. Se llama desde el
+   * bucle de render, que corre FUERA de la zona de Angular; por eso se reentra
+   * con ngZone.run() para que la detección de cambios del padre se dispare.
+   */
+  private emitReady() {
+    if (this.hasEmittedReady) return;
+    this.hasEmittedReady = true;
+    this.ngZone.run(() => this.ready.emit());
   }
 
   ngOnDestroy() {
@@ -547,7 +577,10 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       this.material.uniforms['uRotSin'].value = Math.sin(t * 0.3);
       
       this.renderer.render(this.scene, this.camera);
-      
+
+      // Primer frame ya pintado => avisar al padre para que arranque su entrada.
+      this.emitReady();
+
       // Ajustar lastFrameTime para mantener frame rate consistente
       this.lastFrameTime = currentTime - (deltaTime % this.frameTime);
     }
@@ -560,7 +593,8 @@ export class LightPillarComponent implements OnInit, AfterViewInit, OnDestroy, O
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
-    
+
+
     // Limpiar timeouts pendientes
     if (this.mouseMoveThrottleId !== null) {
       clearTimeout(this.mouseMoveThrottleId);

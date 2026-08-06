@@ -6,7 +6,7 @@
 
     .home-section {
         position: relative;
-        z-index: 1; /* Content above stars */
+        z-index: 1; /* Contenido por encima del pilar */
         min-height: 100vh; /* Center content vertically */
         background: radial-gradient(circle at center top, var(--gradient-color) 0%, transparent 40%);
 
@@ -17,6 +17,15 @@
             width: 100%;
             height: 100%;
             z-index: -1;
+            // Fundido de entrada: arranca oculto y se revela cuando el pilar
+            // avisa que ya pintó su primer frame (.is-visible). La duración
+            // debe coincidir con PILLAR_FADE_MS en home.component.ts.
+            opacity: 0;
+            transition: opacity 800ms ease-out;
+
+            &.is-visible {
+                opacity: 1;
+            }
             mask-image: linear-gradient(
                 to bottom, 
                 transparent 0%, 
@@ -31,6 +40,28 @@
                 black 85%,
                 transparent 100%
             );
+        }
+    }
+
+    // Envoltorio del contenido. Repite el centrado del padre para no alterar
+    // la maquetación original.
+    .home-content {
+        position: relative;
+        z-index: 1;
+
+        // Entrada en cascada, con CSS puro a propósito: usar
+        // @angular/animations aquí suspendería las animaciones internas de
+        // <app-role-title> mientras el ancestro anima.
+        // 'backwards' aplica el estado inicial durante el delay: sin él, los
+        // elementos aún no animados parpadearían visibles antes de su turno.
+        .anim-item {
+            animation: content-enter 600ms ease-out backwards;
+
+            @for $i from 2 through 5 {
+                &:nth-child(#{$i}) {
+                    animation-delay: #{($i - 1) * 120}ms;
+                }
+            }
         }
     }
 
@@ -83,9 +114,6 @@
     .home-title {
         color: var(--contrast-text-color);
         font-family: 'Lucida Console',monospace;
-        // font-size: 2.5rem;
-        // font-weight: 700;
-        // margin-top: 1rem;
     }
 
     .home-subtitle {
@@ -103,6 +131,17 @@
         font-family:"'Lucida Console',monospace";
     }
 
+}
+
+@keyframes content-enter {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes shine {
@@ -126,32 +165,6 @@
   to {
     --angle: 360deg;
   }
-}
-
-// Estilos para el efecto de estrellas en móvil
-.stars-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
-}
-
-.star {
-    position: absolute;
-    background-color: var(--text-color);
-    border-radius: 50%;
-    opacity: 0;
-    box-shadow: 0 0 4px var(--text-color);
-    animation: twinkle infinite ease-in-out;
-}
-
-@keyframes twinkle {
-    0% { opacity: 0; transform: scale(0.5); }
-    50% { opacity: 1; transform: scale(1.2); }
-    100% { opacity: 0; transform: scale(0.5); }
 }
 
 p{
