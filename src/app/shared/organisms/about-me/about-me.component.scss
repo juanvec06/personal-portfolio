@@ -128,6 +128,90 @@
         }
       }
 
+      /* Palabras clave resaltadas para que la descripción se pueda escanear
+         de un vistazo en lugar de leerla entera. */
+      .description .highlight {
+        color: var(--contrast-text-color);
+        font-weight: 600;
+      }
+
+      /* Tarjeta de datos rápidos. Los degradados usan las variables del tema,
+         así que se recolorean solos en claro y oscuro. */
+      .quick-facts {
+        position: relative;
+        margin: 1.5rem 0;
+        padding: 1.25rem 1.5rem;
+        border-radius: 16px;
+        background: var(--card-background);
+
+        /* Borde degradado: el ::before pinta el degradado a sangre y la
+           máscara recorta el centro, dejando visible solo el contorno. */
+        &::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          padding: 1px;
+          border-radius: inherit;
+          background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+      }
+
+      .quick-facts-title {
+        margin-bottom: 0.75rem;
+        font-size: 1.15rem;
+        font-weight: 600;
+        /* Mismo truco que .home-subtitle: el degradado se recorta al texto. */
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .quick-facts-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+
+        li {
+          display: flex;
+          align-items: center;
+          gap: 0.65rem;
+          font-size: 0.95rem;
+        }
+
+        li + li {
+          margin-top: 0.5rem;
+        }
+
+        i {
+          flex-shrink: 0;
+          font-size: 1.1rem;
+          color: var(--contrast-text-color);
+        }
+      }
+
+      /* SOLO MÓVIL: por debajo del breakpoint lg de Bootstrap (992px) las
+         columnas col-lg-* dejan de aplicar y la imagen se apila sobre el
+         texto ocupando todo el ancho. Aquí la achicamos, la centramos y le
+         damos aire respecto al texto que queda debajo. */
+      @media (max-width: 991.98px) {
+        .image-container {
+          max-width: 220px;
+          margin-left: auto;
+          margin-right: auto;
+          margin-bottom: 2.5rem;
+        }
+
+        .quick-facts {
+          padding: 1rem 1.15rem;
+        }
+      }
+
       @media (min-width: 1200px) { /* Medium (md) breakpoint */
           .description {
             font-size: 1.3rem !important; /* This is the equivalent of fs-2 */

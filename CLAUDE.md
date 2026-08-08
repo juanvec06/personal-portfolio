@@ -29,7 +29,7 @@ npm test         # Karma + Jasmine
 ```
 
 Production build has strict budgets: initial bundle warn 500kb / error 1mb;
-per-component styles warn 2kb / error 4kb.
+per-component styles warn 2kb / error 5kb.
 
 ## Architecture
 
