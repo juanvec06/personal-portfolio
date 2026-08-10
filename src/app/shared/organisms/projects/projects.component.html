@@ -44,13 +44,6 @@
               </div>
             </button>
           </div>
-
-          <!-- Indicador de progreso (qué proyecto se muestra) -->
-          <div class="progress-dots">
-            <span *ngFor="let project of projects; let i = index"
-                class="dot"
-                [class.active]="i === activeIndex()"></span>
-          </div>
         </div>
       </div>
     </div>

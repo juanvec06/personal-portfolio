@@ -1,19 +1,38 @@
 <section class="skills-section" id="section-skills">
     <div class="container">
         <app-section-title>Skills</app-section-title>
-        
+
         <div class="skills-categories">
-            @for (category of skillCategories; track category.title) {
+            @for (category of marqueeCategories; track category.title) {
                 <div class="skill-category">
                     <h3 class="category-title">{{ category.title }}</h3>
-                    <div class="skills-grid">
+
+                    <!-- El carrusel repite tarjetas para llenar el ancho, así que
+                         se oculta a los lectores de pantalla y se expone en su
+                         lugar esta lista limpia, sin repeticiones. -->
+                    <ul class="visually-hidden">
                         @for (skill of category.skills; track skill.name) {
-                            <app-skill-card 
-                                [name]="skill.name" 
-                                [icon]="skill.icon"
-                                [iconType]="skill.iconType || 'class'"
-                                [glowColor]="category.glowColor">
-                            </app-skill-card>
+                            <li>{{ skill.name }}</li>
+                        }
+                    </ul>
+
+                    <div class="carousel" aria-hidden="true">
+                        <!-- Dos grupos idénticos: cuando el primero termina de
+                             salir por la izquierda, el segundo ya ocupa su sitio
+                             y la animación reinicia sin salto visible. -->
+                        @for (track of tracks; track track) {
+                            <div class="group"
+                                 [class.reverse]="category.reverse"
+                                 [style.animationDuration]="category.durationSec + 's'">
+                                @for (skill of category.items; track $index) {
+                                    <app-skill-card
+                                        [name]="skill.name"
+                                        [icon]="skill.icon"
+                                        [iconType]="skill.iconType || 'class'"
+                                        [glowColor]="category.glowColor">
+                                    </app-skill-card>
+                                }
+                            </div>
                         }
                     </div>
                 </div>

@@ -18,11 +18,15 @@
     background: var(--card-background, #060010cc);
     position: relative;
     overflow: hidden;
-    transition: transform 0.15s ease-out, box-shadow 0.3s ease;
     cursor: default;
 
+    /* Hover de escritorio: solo luz, cero movimiento. El resplandor se enciende
+       centrado (--glow-x/--glow-y se quedan en su 50% por defecto) en lugar de
+       seguir al cursor, que era la otra fuente de movimiento. */
     &:hover {
-        box-shadow: 
+        --glow-intensity: 1;
+
+        box-shadow:
             0 8px 25px rgba(0, 0, 0, 0.3),
             0 0 30px rgba(var(--glow-color), 0.2);
     }
@@ -62,15 +66,9 @@
         justify-content: center;
         position: relative;
         z-index: 2;
-
-        i {
-            transition: transform 0.3s ease;
-        }
     }
 
-    &:hover &__icon i {
-        transform: scale(1.1);
-    }
+
 
     &__name {
         font-size: 0.85rem;
@@ -84,7 +82,6 @@
         width: 4rem;
         height: 60px;
         object-fit: contain;
-        transition: transform 0.3s ease;
         // First filter (for light theme)
         filter: brightness(0) saturate(100%) invert(19%) sepia(72%) saturate(534%) hue-rotate(350deg) brightness(92%) contrast(94%);
         
@@ -122,5 +119,18 @@
         opacity: 1;
         transition: opacity 0.3s ease;
         z-index: 1;
+
+        /* Hace girar el degradado cónico. --angle se anima AQUÍ, en el propio
+           pseudo-elemento, y no en el body: al ser una custom property con
+           inherits:true, animarla arriba forzaría recalcular el estilo de todo
+           el árbol DOM en cada frame (ver la nota en styles.scss). */
+        animation: 3s spin linear infinite;
     }
+}
+
+/* Angular aísla los @keyframes por componente, así que este 'spin' no choca
+   con los del home o projects. */
+@keyframes spin {
+    from { --angle: 0deg; }
+    to { --angle: 360deg; }
 }

@@ -39,16 +39,57 @@
     }
 }
 
-.skills-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 1rem;
-    
-    @media (min-width: 600px) {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+.carousel {
+  width: 100%;
+  display: flex;
+  /* hidden y no auto: el track se mueve solo, permitir scroll manual encima
+     haría que el usuario "pelease" contra la animación. */
+  overflow: hidden;
+  mask-image: linear-gradient(
+    to right, 
+    transparent 0%, 
+    black 15%, 
+    black 85%, 
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 15%,
+    black 85%,
+    transparent 100%
+  );
+  /* Pausa al pasar el ratón: la tarjeta tiene efecto de inclinación y brillo
+     que sigue al cursor, y es inusable si la tarjeta se está moviendo. */
+  &:hover .group {
+    animation-play-state: paused;
+  }
+
+  .group{
+    display: flex;
+    gap: 1em;
+    /* La duración real llega por binding inline desde el componente
+       (durationSec); este valor es solo el de reserva. */
+    animation: scroll 20s linear infinite;
+    padding-right: 1em;
+
+    /* Filas alternas en sentido contrario, para que la sección no parezca
+       un único bloque desplazándose. */
+    &.reverse {
+      animation-direction: reverse;
     }
-    
-    @media (min-width: 1024px) {
-        grid-template-columns: repeat(6, 1fr);
+
+    app-skill-card {
+      flex: 0 0 120px;
     }
+  }
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
