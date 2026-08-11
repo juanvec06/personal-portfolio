@@ -90,5 +90,5 @@ zone). Key facts:
 ## Scope limit
 - You have a strict limit when modifying the code.
 - Before propose or making any change, evaluate the volume of modiying, deleted and added lines of code.
-- If the volume of changes have a big probability of modifying more than 2500 lines of code, DON'T make any changes.
-- Instead, stop the task, explain to me why the change is so massive, and propose a strategy to break the work down into sub-modules or smaller steps of fewer than 2500 lines.
+- If the volume of changes have a big probability of modifying more than 1000 lines of code, DON'T make any changes.
+- Instead, stop the task, explain to me why the change is so massive, and propose a strategy to break the work down into sub-modules or smaller steps of fewer than 1000 lines.
