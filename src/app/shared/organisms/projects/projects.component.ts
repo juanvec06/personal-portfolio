@@ -53,9 +53,15 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   projects: Project[] = [
     {
+      title: 'Academic Project Management System',
+      description: 'Developed as an academic project using spring boot, this microservices-based platform is designed to streamline the management of academic projects by facilitating collaboration between students, companies, and coordinators.',
+      Url: 'https://github.com/paulamunoz06/GestionProyectosMicro/tree/main',
+      imageLocation: 'assets/project-management-image.webp'
+    },
+    {
       title: 'Appointments and administrative utilities Manager System',
       description: 'Developed as an academic project, this application manages appointments and administrative tasks for barbershops. Built with Angular and Spring Boot, it features user authentication, role-based access control, and a responsive design for optimal performance across devices.',
-      Url: 'https://github.com/juanvec06/api-gateway-barbershop',
+      Url: 'https://github.com/JDiegoG12/barberFront',
       imageLocation: 'assets/appointment-management-image.webp'
     },
     {
@@ -64,25 +70,20 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
       Url: 'https://juandavidvelacoronado.vercel.app/',
       imageLocation: 'assets/portfolio-image.webp'
     },
+
+    // TODO: proyecto de ejemplo generado — reemplazar con datos e imagen reales.
     {
-      title: 'Academic Project Management System',
-      description: 'Developed as an academic project, this microservices-based platform is designed to streamline the management of academic projects by facilitating collaboration between students, companies, and coordinators. It was developed using Java with Spring Boot for the backend and Java Swing for the frontend.',
-      Url: 'https://github.com/paulamunoz06/GestionProyectosMicro/tree/main',
-      imageLocation: 'assets/project-management-image.webp'
+      title: 'AIMO: Multi-Agent LLM Architecture for Emotional Support',
+      description: 'Web application that leverages multi-agent architecture to provide emotional support through AI-driven conversations. Built with React and Flask 3.0.',
+      Url: 'https://aimo-amber.vercel.app/',
+      imageLocation: 'assets/aimo.png'
     },
     // TODO: proyecto de ejemplo generado — reemplazar con datos e imagen reales.
     {
-      title: 'Example Project — REST API Toolkit',
-      description: 'Example placeholder project. A backend toolkit exposing a documented REST API built with Spring Boot, including JWT authentication, layered architecture and integration tests. Replace this entry with a real project.',
-      Url: 'https://github.com/juanvec06/',
-      imageLocation: 'assets/portfolio-image.webp'
-    },
-    // TODO: proyecto de ejemplo generado — reemplazar con datos e imagen reales.
-    {
-      title: 'Example Project — Data Pipeline',
-      description: 'Example placeholder project. A Python data pipeline that ingests, cleans and aggregates datasets, orchestrated with scheduled tasks and containerized with Docker. Replace this entry with a real project.',
-      Url: 'https://github.com/juanvec06/',
-      imageLocation: 'assets/project-management-image.webp'
+      title: 'Juntas de Acción Comunal Digitalization with local government',
+      description: 'microservices ecosystem designed to digitize the operations of Colombian Juntas de Acción Comunal — neighborhood civic organizations recognized by law. It centralizes the management of community boards, their affiliates, asocomunal federations, and the audit trail behind every change.',
+      Url: 'https://seguridadpublica.tics.sedcauca.gov.co/',
+      imageLocation: 'assets/jac.png'
     }
   ];
 
@@ -349,7 +350,4 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  openProjectLink(url: string) {
-    window.open(url, '_blank');
-  }
 }

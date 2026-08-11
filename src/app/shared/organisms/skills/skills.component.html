@@ -16,15 +16,17 @@
                         }
                     </ul>
 
-                    <div class="carousel" aria-hidden="true">
+                    <div class="carousel" [class.is-static]="reducedMotion()" aria-hidden="true">
                         <!-- Dos grupos idénticos: cuando el primero termina de
                              salir por la izquierda, el segundo ya ocupa su sitio
-                             y la animación reinicia sin salto visible. -->
-                        @for (track of tracks; track track) {
+                             y la animación reinicia sin salto visible.
+                             Sin movimiento: un solo grupo, la lista sin repetir
+                             y desplazamiento manual. -->
+                        @for (track of (reducedMotion() ? staticTrack : tracks); track track) {
                             <div class="group"
-                                 [class.reverse]="category.reverse"
+                                 [class.reverse]="!reducedMotion() && category.reverse"
                                  [style.animationDuration]="category.durationSec + 's'">
-                                @for (skill of category.items; track $index) {
+                                @for (skill of (reducedMotion() ? category.skills : category.items); track $index) {
                                     <app-skill-card
                                         [name]="skill.name"
                                         [icon]="skill.icon"

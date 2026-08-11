@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, PLATFORM_ID, signal } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { SectionTitleComponent } from '../../atoms/section-title/section-title.component';
 import { SkillCardComponent } from '../../atoms/skill-card/skill-card.component';
 
@@ -125,6 +125,24 @@ export class SkillsComponent {
 
   /** Los dos grupos idénticos que forman el bucle sin costuras. */
   readonly tracks = [0, 1];
+
+  /** Sin movimiento sobra el segundo grupo: no hay bucle que disimular. */
+  readonly staticTrack = [0];
+
+  /**
+   * Respeta `prefers-reduced-motion`. Pararlo y ya no vale: quieto, el carrusel
+   * solo enseñaría las 2-3 primeras tarjetas y el resto quedaría inalcanzable.
+   * Así que en ese modo se pinta la lista real (sin repetir) y el SCSS la vuelve
+   * desplazable a mano (ver `.is-static`).
+   */
+  protected reducedMotion = signal(false);
+
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    if (!isPlatformBrowser(platformId)) return;
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    this.reducedMotion.set(query.matches);
+    query.addEventListener('change', event => this.reducedMotion.set(event.matches));
+  }
 
   /** Repite la lista de skills hasta alcanzar MIN_TRACK_ITEMS tarjetas. */
   private fillTrack(skills: Skill[]): Skill[] {

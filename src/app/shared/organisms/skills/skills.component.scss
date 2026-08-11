@@ -1,7 +1,10 @@
 .skills-section {
     padding: 4rem 2rem;
-    background-color: var(--background-color, #0a0a0a);
-    color: var(--text-color, #fff);
+    /* Sin valor de reserva: los tokens siempre existen (:root en styles.scss) y
+       los que había aquí eran de tema oscuro, así que en claro habrían pintado
+       justo lo contrario de lo que toca. */
+    background-color: var(--background-color);
+    color: var(--text-color);
 
     .container {
         max-width: 1200px;
@@ -17,24 +20,23 @@
 }
 
 .skill-category {
+    /* Mismo patrón de encabezado que Certifications (título + filete que llega
+       hasta el borde): son secciones vecinas y antes cada una separaba sus
+       grupos de una forma distinta. */
     .category-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0 0 1.5rem;
         font-size: 1.5rem;
         font-weight: 600;
-        margin-bottom: 1.5rem;
-        color: var(--text-color, #fff);
-        position: relative;
-        padding-left: 1rem;
+        color: var(--text-color);
 
-        &::before {
+        &::after {
             content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 4px;
-            height: 70%;
-            background: var(--primary-color, #8400ff);
-            border-radius: 2px;
+            flex: 1;
+            height: 1px;
+            background-color: var(--border-color);
         }
     }
 }
@@ -85,11 +87,49 @@
   }
 }
 
+/* Sin movimiento: el carrusel se congela y pasa a desplazarse a mano. Se quita
+   la máscara porque desvanecía justo los bordes que ahora hay que poder leer. */
+.carousel.is-static {
+  overflow-x: auto;
+  mask-image: none;
+  -webkit-mask-image: none;
+  scrollbar-width: thin;
+
+  .group {
+    animation: none;
+    padding-right: 0;
+  }
+}
+
+/* Red de seguridad para el instante previo a que el componente lea matchMedia
+   (y para SSR): aunque siga pintándose el marcado del bucle, nada se mueve. */
+@media (prefers-reduced-motion: reduce) {
+  .carousel .group {
+    animation: none;
+  }
+}
+
 @keyframes scroll {
   0% {
     transform: translateX(0);
   }
   100% {
     transform: translateX(-100%);
+  }
+}
+
+/* En móvil, 2rem de margen lateral se comían el ancho útil (quedaban 287px de
+   1200 posibles). 1rem es lo que usan Projects y Certifications. */
+@media (max-width: 576px) {
+  .skills-section {
+    padding: 3.5rem 1rem 4rem;
+  }
+
+  .skills-categories {
+    gap: 2.5rem;
+  }
+
+  .skill-category .category-title {
+    font-size: 1.25rem;
   }
 }

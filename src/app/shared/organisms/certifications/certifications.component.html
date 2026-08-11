@@ -1,1 +1,88 @@
-<p>certifications works!</p>
+<section class="certifications-section" id="section-certifications">
+    <div class="container">
+        <app-section-title>Certifications</app-section-title>
+
+        @if (hasCertifications()) {
+            <!-- Control segmentado: el mismo conjunto se reagrupa por un eje o el otro. -->
+            <div class="group-switch" role="group" aria-label="Group certifications by">
+                <button type="button"
+                        class="switch-option"
+                        [class.is-active]="mode() === 'area'"
+                        [attr.aria-pressed]="mode() === 'area'"
+                        (click)="setMode('area')">
+                    <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                    By skill
+                </button>
+                <button type="button"
+                        class="switch-option"
+                        [class.is-active]="mode() === 'issuer'"
+                        [attr.aria-pressed]="mode() === 'issuer'"
+                        (click)="setMode('issuer')">
+                    <i class="bi bi-buildings" aria-hidden="true"></i>
+                    By company
+                </button>
+            </div>
+
+            <div class="cert-groups" aria-live="polite">
+                @for (group of groups(); track group.label) {
+                    <div class="cert-group">
+                        <h3 class="group-heading">
+                            <span class="group-name">{{ group.label }}</span>
+                            <span class="group-count">{{ group.items.length }}</span>
+                        </h3>
+
+                        <ul class="cert-grid">
+                            @for (cert of group.items; track cert.name) {
+                                <li class="cert-card">
+                                    <div class="cert-card-top">
+                                        @if (cert.issuerLogo) {
+                                            <img class="issuer-logo"
+                                                 [src]="cert.issuerLogo"
+                                                 [alt]="cert.issuer + ' logo'"
+                                                 width="40" height="40" loading="lazy">
+                                        } @else {
+                                            <span class="issuer-logo issuer-logo--fallback" aria-hidden="true">
+                                                <i class="bi bi-patch-check"></i>
+                                            </span>
+                                        }
+
+                                        <!-- La tarjeta muestra SIEMPRE el eje contrario al del
+                                             encabezado, para no repetir el mismo dato dos veces. -->
+                                        @if (mode() === 'area') {
+                                            <span class="issuer-name">{{ cert.issuer || 'Issuer pending' }}</span>
+                                        } @else {
+                                            <span class="area-chip">{{ cert.area }}</span>
+                                        }
+                                    </div>
+
+                                    <h4 class="cert-name">{{ cert.name }}</h4>
+
+                                    <div class="cert-foot">
+                                        <time class="cert-date" [attr.datetime]="cert.issued">
+                                            {{ formatIssued(cert.issued) }}
+                                        </time>
+
+                                        @if (cert.credentialUrl) {
+                                            <a class="verify-link"
+                                               [href]="cert.credentialUrl"
+                                               target="_blank"
+                                               rel="noopener noreferrer">
+                                                Verify
+                                                <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        } @else {
+            <p class="cert-empty">
+                <i class="bi bi-patch-check" aria-hidden="true"></i>
+                No certifications listed yet.
+            </p>
+        }
+    </div>
+</section>

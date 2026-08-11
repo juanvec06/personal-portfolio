@@ -58,14 +58,25 @@
         z-index: 1;
     }
 
+    /* Caja fija: los iconos de fuente (bi) y los remotos (imagen) ocupaban
+       tamaños distintos (40px contra 64px de ancho), y con las dos clases
+       mezcladas en la misma fila el desajuste se veía en cada tarjeta. */
     &__icon {
+        width: 48px;
+        height: 48px;
         font-size: 2.5rem;
-        color: var(--text-color, #fff);
+        color: var(--text-color);
         display: flex;
         align-items: center;
         justify-content: center;
         position: relative;
         z-index: 2;
+
+        /* Sin esto el <i> hereda un interlineado de 1.5 y su caja mide 60px de
+           alto dentro de una caja de 48: el glifo se salía por abajo. */
+        i {
+            line-height: 1;
+        }
     }
 
 
@@ -79,8 +90,10 @@
         z-index: 2;
     }
     img {
-        width: 4rem;
-        height: 60px;
+        /* 40px = los 2.5rem del icono de fuente, para que ambos midan lo mismo
+           dentro de la caja de 48px. */
+        width: 40px;
+        height: 40px;
         object-fit: contain;
         // First filter (for light theme)
         filter: brightness(0) saturate(100%) invert(19%) sepia(72%) saturate(534%) hue-rotate(350deg) brightness(92%) contrast(94%);
