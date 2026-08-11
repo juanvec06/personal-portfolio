@@ -29,7 +29,7 @@ npm test         # Karma + Jasmine
 ```
 
 Production build has strict budgets: initial bundle warn 500kb / error 1mb;
-per-component styles warn 2kb / error 4kb.
+per-component styles warn 2kb / error 5kb.
 
 ## Architecture
 
@@ -45,7 +45,7 @@ Atomic-design folder layout under `src/app/shared/`:
   - `device.service.ts` — `isMobile` signal via userAgent keyword sniffing
     (note: not width-based, so desktop-narrow windows are treated as desktop).
 
-Page section order: navbar → home → projects → about-me → skills → footer.
+Page section order: navbar → home → projects → about-me → skills → footer → certifications → contact me.
 
 ## The hero animation (`light-pillar.component.ts`)
 
@@ -82,6 +82,10 @@ zone). Key facts:
 - Keep heavy/browser-only work behind `isPlatformBrowser` and
   `ngZone.runOutsideAngular` (the existing code does this).
 - Assets live in `src/assets` (images are `.webp`; profile is `.png`).
+- **Testing:** no test requirement. The only specs present are the auto-generated
+  `should create` scaffolds, so `npm test` does not imply a real suite. Verify work
+  with `npm run build` plus a browser check — do not add tests unless asked, and do
+  not claim test coverage.
 
 ## 1. Management of Doubts and Uncertainty
 - If an instruction is ambiguous, requirements are missing, or you have doubts about the architectural implementation, DO NOT assume the answer or begin programming.
@@ -90,5 +94,5 @@ zone). Key facts:
 ## Scope limit
 - You have a strict limit when modifying the code.
 - Before propose or making any change, evaluate the volume of modiying, deleted and added lines of code.
-- If the volume of changes have a big probability of modifying more than 2500 lines of code, DON'T make any changes.
-- Instead, stop the task, explain to me why the change is so massive, and propose a strategy to break the work down into sub-modules or smaller steps of fewer than 2500 lines.
+- If the volume of changes have a big probability of modifying more than 500 lines of code, DON'T make any changes.
+- Instead, stop the task, explain to me why the change is so massive, and propose a strategy to break the work down into sub-modules or smaller steps of fewer than 500 lines.

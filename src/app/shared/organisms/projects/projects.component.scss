@@ -86,6 +86,15 @@
     top: 50%;
     left: 0;
     width: 100%;
+
+    /* El panel tiene overflow:hidden y mide 100vh, así que una tarjeta más alta
+       que la pila se cortaba por abajo (hasta 93px en 1280x800: se comía el
+       borde inferior y parte de la captura). Se limita a la pila y la imagen
+       cede el espacio que haga falta. */
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     transform: translateY(-50%) translateY(45px);
     opacity: 0;
     visibility: hidden;
@@ -103,30 +112,16 @@
     }
   }
 
-  /* Indicador de progreso */
-  .progress-dots {
-    display: flex;
-    gap: 0.6rem;
-    margin-top: 2rem;
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: var(--border-color);
-      transition: 0.3s ease;
-
-      &.active {
-        background-color: var(--primary-color);
-        box-shadow: 0 0 10px var(--primary-color);
-        transform: scale(1.3);
-      }
-    }
-  }
 }
 
 /* ================= Tarjeta (borde animado en hover, reutilizado) ================= */
 .timeline-content {
+  /* La tarjeta es un <a>: hay que devolverle el bloque y neutralizar el
+     subrayado y el color de enlace heredados. */
+  display: block;
+  text-decoration: none;
+  color: inherit;
+
   text-align: start;
   padding: 1.25rem;
   border-radius: 10px;
@@ -135,6 +130,11 @@
   border: var(--border-color) 2px solid;
   isolation: isolate;
   cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 4px;
+  }
 
   .project-title {
     margin: 0 0 1rem 0;
@@ -155,11 +155,36 @@
 
   .project-image-container {
     margin-top: 1rem;
-    text-align: center;
     position: relative;
     z-index: 2;
+    /* Centra la captura en el hueco: como la imagen conserva su proporción, casi
+       nunca llena todo el ancho y el sobrante debe repartirse a los dos lados. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Es lo único elástico de la tarjeta: el título y el texto se leen enteros,
+       la captura encoge. `min-height: 0` es lo que permite encoger a un hijo
+       flex por debajo de su contenido.
+       La proporción vive AQUÍ, en el contenedor, y no en la propia imagen: así,
+       al encogerse, la imagen sigue rellenando el hueco (se reescala y recorta)
+       en vez de que la tarjeta le corte media captura de un tajo. */
+    aspect-ratio: 5 / 4;
+    min-height: 0;
+    flex: 0 1 auto;
+    /* Las capturas van de 1.13:1 a 1.40:1: con `height: auto` la tarjeta medía
+       hasta 90px más según el proyecto y pegaba un salto en cada transición.
+       La imagen rellena el contenedor, que es quien fija la proporción. */
+    /* La captura se muestra ENTERA: en una pantalla de una app, lo que hay bajo
+       la barra de navegación es justo lo que se quiere enseñar, y `cover` lo
+       recortaba. Se limita por ancho y alto y conserva su proporción, así que
+       la caja del elemento coincide con la imagen pintada: sin `object-fit` no
+       hay franjas vacías y el borde redondeado y la sombra abrazan la captura
+       en lugar de dibujarse alrededor de un hueco transparente. */
     .project-image {
-      width: 100%;
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
       height: auto;
       border-radius: 1rem;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -198,7 +223,11 @@
 /* ================= Móvil: secuencia como fondo tenue, una tarjeta a la vez ================= */
 .projects-section.is-mobile {
   .projects-pinned {
-    padding: 3rem 1rem;
+    /* La navbar es position:fixed (~76px de alto) y GSAP fija este panel a ras
+       del viewport, así que la navbar queda ENCIMA. Sin este hueco superior el
+       título "Projects" aparece tapado a medias.
+       Abajo se recorta el padding: cuanto menos, más árbol se ve. */
+    padding: 5.5rem 1rem 1.5rem;
   }
   .split-row {
     display: block;
@@ -224,9 +253,21 @@
     z-index: 2;
     height: 100%;
     justify-content: center;
+    /* El árbol se dibuja anclado ABAJO del canvas (ver drawFrame: dy = ch - dh).
+       Reservando hueco inferior, la tarjeta y los puntos suben y dejan a la
+       vista la copa del árbol mientras crece. */
+    padding-bottom: 12vh;
   }
-  .progress-dots {
-    justify-content: center;
+  /* Pantallas bajas: el panel mide 100vh, así que no hay altura para reservar
+     hueco al árbol sin recortar la tarjeta. Aquí se prioriza que la tarjeta se
+     vea entera y se recuperan los márgenes al mínimo que despeja la navbar. */
+  @media (max-height: 780px) {
+    .projects-pinned {
+      padding: 5rem 1rem 1rem;
+    }
+    .cards-side {
+      padding-bottom: 0;
+    }
   }
 }
 
@@ -251,7 +292,30 @@
   .project-title {
     font-size: 2rem !important;
   }
+  /* Bajado de 1.3rem: a ese tamaño la descripción se comía la altura de la
+     tarjeta y dejaba a la captura un hueco donde no cabía entera. */
   .project-description {
-    font-size: 1.3rem !important;
+    font-size: 1.05rem !important;
+  }
+}
+
+/* Se apaga lo decorativo y que se mueve solo: el parpadeo de las 100 estrellas,
+   el borde cónico que gira y el fundido de las tarjetas.
+   Lo que SÍ se conserva es el crecimiento del árbol ligado al scroll: no se
+   mueve por su cuenta, avanza solo cuando el usuario desplaza, y sin él las
+   tarjetas apiladas dejarían ver un único proyecto y el resto inalcanzable. */
+@media (prefers-reduced-motion: reduce) {
+  .star {
+    animation: none;
+    opacity: 0.55;
+  }
+
+  .timeline-content::before,
+  .efecto-hover::before {
+    animation: none;
+  }
+
+  .projects-section .project-card {
+    transition: none;
   }
 }

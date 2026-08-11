@@ -31,25 +31,27 @@
         <!-- DERECHA: pila de tarjetas de proyecto -->
         <div class="cards-side">
           <div class="cards-stack">
-            <button #projectCard
+            <!-- Enlace, no botón: la tarjeta lleva fuera del sitio. Así el
+                 lector de pantalla lo anuncia como enlace, funciona el clic
+                 central / ctrl+clic, y `rel` evita que la página destino
+                 alcance a esta por `window.opener`. -->
+            <a #projectCard
                 *ngFor="let project of projects; let i = index"
                 class="timeline-content project-card"
                 [class.active]="i === activeIndex()"
                 [class.is-past]="i < activeIndex()"
-                (click)="openProjectLink(project.Url)">
+                [href]="project.Url"
+                target="_blank"
+                rel="noopener noreferrer">
               <h3 class="project-title">{{ project.title }}</h3>
               <p class="project-description">{{ project.description }}</p>
               <div class="project-image-container">
-                <img [src]="project.imageLocation" alt="{{ project.title }} image" class="project-image">
+                <img [src]="project.imageLocation"
+                     alt="Screenshot of {{ project.title }}"
+                     class="project-image"
+                     loading="lazy">
               </div>
-            </button>
-          </div>
-
-          <!-- Indicador de progreso (qué proyecto se muestra) -->
-          <div class="progress-dots">
-            <span *ngFor="let project of projects; let i = index"
-                class="dot"
-                [class.active]="i === activeIndex()"></span>
+            </a>
           </div>
         </div>
       </div>

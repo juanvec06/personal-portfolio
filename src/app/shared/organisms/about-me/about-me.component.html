@@ -15,20 +15,48 @@
             <app-section-title class="col-12">About Me</app-section-title>
         </div>
         <div class="content row">
-            <div class="col-12 col-lg-4 image-container order-2 order-lg-1">
+            <div class="col-12 col-lg-4 image-container order-lg-1">
                 <img [ngSrc]="profileImage()" alt="Photo of me" width="400" height="400" priority>
             </div>
-            <div class="text col-12 col-lg-7 order-1 order-lg-2 text-center text-lg-start">
+            <div class="text col-12 col-lg-7 order-1 order-lg-2 text-start">
                 <p class="description">
-                    I am a {{ age }}-year-old, {{ semester }}-semester Systems Engineering student at the University of Cauca with currently ranked among the top students of my cohort. I am highly motivated by backend development, with a strong focus on building robust and scalable solutions using Spring Boot, NestJS, and Python. I also have some experience working with frontend technologies, including React and Angular, allowing me to contribute across the full development stack.
+                    I am a {{ age }}-year-old <strong class="highlight">Systems Engineering</strong> student at the
+                    <strong class="highlight">University of Cauca</strong>, currently in
+                    <strong class="highlight">semester {{ semester }}</strong> and ranked among the
+                    <strong class="highlight">top of my cohort</strong>. I focus on
+                    <strong class="highlight">backend development</strong>, building robust and scalable solutions with
+                    <strong class="highlight">Spring Boot</strong>, <strong class="highlight">NestJS</strong> and
+                    <strong class="highlight">Python</strong>, and I also work across the stack with
+                    <strong class="highlight">React</strong> and <strong class="highlight">Angular</strong>.
                 </p>
                 <p class="description">
-                    To complement my backend development skills, I have completed Cisco Networking Academy courses in networking and cybersecurity. These courses have strengthened my understanding of secure software development practices. I have also achieved the B1 English proficiency requirement, allowing me to work with technical documentation and communicate effectively in professional environments.
+                    I hold a <strong class="highlight">B2 English</strong> certification for technical documentation, professional communication and learning new skills you will see
+                    in the next sections.
                 </p>
+                <!-- Datos rápidos: reúne la información que no aparece en ninguna
+                     otra sección (ubicación, disponibilidad e idiomas). Va antes
+                     del botón para que "View Resume" siga siendo la última acción. -->
+                <div class="quick-facts">
+                    <p class="quick-facts-title">Always learning, always improving</p>
+                    <ul class="quick-facts-list">
+                        <li>
+                            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                            <span>Popayán, Colombia · Open to remote</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-briefcase" aria-hidden="true"></i>
+                            <span>Open to internships &amp; junior roles</span>
+                        </li>
+                        <li>
+                            <i class="bi bi-translate" aria-hidden="true"></i>
+                            <span>Spanish (native) · English B2</span>
+                        </li>
+                    </ul>
+                </div>
                 <div class="d-flex justify-content-center">
                     <a class="btn btn-primary mb-4 mt-lg-4" href="assets/resume.pdf" rel="noopener noreferrer" target="_blank">
                         <i class="bi bi-file-earmark-medical"></i>
-                        View Resume
+                        View Detailed Resume
                     </a>
                 </div>
             </div>

@@ -22,10 +22,10 @@ interface Star {
 }
 
 // La secuencia de imágenes (assets/white-tree para oscuro, assets/tree para claro)
-// tiene 270 fotogramas. Cada proyecto ocupa 54 fotogramas => 270 / 54 = 5 proyectos.
+// tiene 270 fotogramas y se reparte entre los proyectos: con 5 proyectos, cada uno
+// ocupa 54 fotogramas de crecimiento del árbol.
 const FRAME_COUNT = 270;
 const PROJECT_COUNT = 5;
-const FRAMES_PER_PHASE = FRAME_COUNT / PROJECT_COUNT; // 54
 
 @Component({
   selector: 'app-projects',
@@ -53,9 +53,15 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
 
   projects: Project[] = [
     {
+      title: 'Academic Project Management System',
+      description: 'Developed as an academic project using spring boot, this microservices-based platform is designed to streamline the management of academic projects by facilitating collaboration between students, companies, and coordinators.',
+      Url: 'https://github.com/paulamunoz06/GestionProyectosMicro/tree/main',
+      imageLocation: 'assets/project-management-image.webp'
+    },
+    {
       title: 'Appointments and administrative utilities Manager System',
       description: 'Developed as an academic project, this application manages appointments and administrative tasks for barbershops. Built with Angular and Spring Boot, it features user authentication, role-based access control, and a responsive design for optimal performance across devices.',
-      Url: 'https://github.com/juanvec06/api-gateway-barbershop',
+      Url: 'https://github.com/JDiegoG12/barberFront',
       imageLocation: 'assets/appointment-management-image.webp'
     },
     {
@@ -64,25 +70,20 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
       Url: 'https://juandavidvelacoronado.vercel.app/',
       imageLocation: 'assets/portfolio-image.webp'
     },
+
+    // TODO: proyecto de ejemplo generado — reemplazar con datos e imagen reales.
     {
-      title: 'Academic Project Management System',
-      description: 'Developed as an academic project, this microservices-based platform is designed to streamline the management of academic projects by facilitating collaboration between students, companies, and coordinators. It was developed using Java with Spring Boot for the backend and Java Swing for the frontend.',
-      Url: 'https://github.com/paulamunoz06/GestionProyectosMicro/tree/main',
-      imageLocation: 'assets/project-management-image.webp'
+      title: 'AIMO: Multi-Agent LLM Architecture for Emotional Support',
+      description: 'Web application that leverages multi-agent architecture to provide emotional support through AI-driven conversations. Built with React and Flask 3.0.',
+      Url: 'https://aimo-amber.vercel.app/',
+      imageLocation: 'assets/aimo.png'
     },
     // TODO: proyecto de ejemplo generado — reemplazar con datos e imagen reales.
     {
-      title: 'Example Project — REST API Toolkit',
-      description: 'Example placeholder project. A backend toolkit exposing a documented REST API built with Spring Boot, including JWT authentication, layered architecture and integration tests. Replace this entry with a real project.',
-      Url: 'https://github.com/juanvec06/',
-      imageLocation: 'assets/portfolio-image.webp'
-    },
-    // TODO: proyecto de ejemplo generado — reemplazar con datos e imagen reales.
-    {
-      title: 'Example Project — Data Pipeline',
-      description: 'Example placeholder project. A Python data pipeline that ingests, cleans and aggregates datasets, orchestrated with scheduled tasks and containerized with Docker. Replace this entry with a real project.',
-      Url: 'https://github.com/juanvec06/',
-      imageLocation: 'assets/project-management-image.webp'
+      title: 'Juntas de Acción Comunal Digitalization with local government',
+      description: 'microservices ecosystem designed to digitize the operations of Colombian Juntas de Acción Comunal — neighborhood civic organizations recognized by law. It centralizes the management of community boards, their affiliates, asocomunal federations, and the audit trail behind every change.',
+      Url: 'https://seguridadpublica.tics.sedcauca.gov.co/',
+      imageLocation: 'assets/jac.png'
     }
   ];
 
@@ -97,15 +98,8 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
   private bgColor = '#F5EFE6';
   private compositeOp: GlobalCompositeOperation = 'multiply';
 
-  // --- Motor de fases / scroll ---
-  // Empieza en -1: "antes de la fase 0". Así el primer scroll hacia abajo reproduce
-  // el crecimiento de la fase 0 (frames 0->54) y se recorren las 5 fases completas.
-  private phase = -1;          // fase actual en escritorio
-  private isStepping = false;   // hay una fase reproduciéndose (bloquea input)
-  private gsap: any = null;
+  // --- Motor de scroll ---
   private scrollTriggerInstance: { kill: (revert?: boolean) => void } | null = null;
-  private observerInstance: { enable: () => void; disable: () => void; kill: () => void } | null = null;
-  private frameTween: { kill: () => void } | null = null;
 
   // --- Observers ---
   private resizeObserver: ResizeObserver | null = null;
@@ -117,7 +111,7 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Al cambiar de tema, si la secuencia ya está activa, recarga los fotogramas
-    // del nuevo set (neutrons <-> tree) y redibuja el fotograma actual.
+    // del nuevo set (white-tree <-> tree) y redibuja el fotograma actual.
     effect(() => {
       const t = this.theme();
       if (!isPlatformBrowser(this.platformId)) return;
@@ -143,8 +137,6 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.frameTween?.kill();
-    this.observerInstance?.kill();
     if (this.scrollTriggerInstance) {
       this.scrollTriggerInstance.kill(true);
       this.scrollTriggerInstance = null;
@@ -280,44 +272,37 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ------------------------------------------------------------------
-  //  Motor de scroll: scroll-jack (escritorio) / snap (móvil)
+  //  Motor de scroll
   // ------------------------------------------------------------------
   private async setupScrollAnimation() {
     // Import dinámico => GSAP queda en chunks aparte que solo se descargan al acercarse.
-    const [{ gsap }, { ScrollTrigger }, { Observer }] = await Promise.all([
+    const [{ gsap }, { ScrollTrigger }] = await Promise.all([
       import('gsap'),
-      import('gsap/ScrollTrigger'),
-      import('gsap/Observer')
+      import('gsap/ScrollTrigger')
     ]);
-    gsap.registerPlugin(ScrollTrigger, Observer);
-    this.gsap = gsap;
+    gsap.registerPlugin(ScrollTrigger);
 
     this.ngZone.runOutsideAngular(() => {
-      const pinned = this.pinnedRef?.nativeElement;
-      if (!pinned) return;
-      this.setupMobileSnap(ScrollTrigger);
-      // if (this.isMobile()) {
-      //   this.setupMobileSnap(ScrollTrigger);
-      // } else {
-      //   this.setupDesktopScrollJack(ScrollTrigger, Observer);
-      // }
+      if (!this.pinnedRef?.nativeElement) return;
+      this.setupScrollSequence(ScrollTrigger);
     });
   }
 
-  /** MÓVIL: pin + scrub con snap a las 5 fases. La secuencia es el fondo tenue. */
-  private setupMobileSnap(ScrollTrigger: any) {
+  /**
+   * Pin + scrub: el panel se mantiene a la vista durante PROJECT_COUNT pantallas de
+   * scroll y el árbol crece siguiendo el progreso. NO se toca la posición del scroll
+   * (sin snap, sin scroll-jack); el `scrub` en segundos hace que el fotograma persiga
+   * al scroll con retardo, de ahí la sensación resbaladiza / flotante.
+   */
+  private setupScrollSequence(ScrollTrigger: any) {
     const pinned = this.pinnedRef!.nativeElement;
     this.scrollTriggerInstance = ScrollTrigger.create({
       trigger: pinned,
       start: 'top top',
       end: () => '+=' + (window.innerHeight * PROJECT_COUNT),
       pin: true,
-      scrub: 1,
-      snap: {
-        snapTo: 1 / PROJECT_COUNT,
-        duration: { min: 0.2, max: 0.5 },
-        ease: 'power1.inOut'
-      },
+      anticipatePin: 1,
+      scrub: 1.2,
       onUpdate: (self: any) => {
         const p = self.progress;
         const frame = Math.min(FRAME_COUNT - 1, Math.round(p * (FRAME_COUNT - 1)));
@@ -328,81 +313,6 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
     });
-  }
-
-  /**
-   * ESCRITORIO: scroll-jack. El pin reserva el espacio de scroll y detecta cuándo
-   * la sección está activa; mientras lo está, un Observer intercepta la rueda/touch
-   * y cada gesto reproduce una fase (54 fotogramas) avanzando la tarjeta. En los
-   * extremos (fase 0 hacia arriba / última hacia abajo) se libera el scroll nativo.
-   */
-  private setupDesktopScrollJack(ScrollTrigger: any, Observer: any) {
-    const pinned = this.pinnedRef!.nativeElement;
-
-    this.observerInstance = Observer.create({
-      target: window,
-      type: 'wheel,touch',
-      tolerance: 10,
-      preventDefault: true,
-      onDown: () => this.stepPhase(1),    // rueda hacia abajo => avanzar fase
-      onUp: () => this.stepPhase(-1)      // rueda hacia arriba => retroceder fase
-    });
-    this.observerInstance!.disable(); // arranca deshabilitado; el pin lo activa
-
-    // El pin solo reserva una pequeña distancia: el Observer hace el trabajo de fases,
-    // y esta distancia corta es la que se recorre para "soltar" la sección en los extremos.
-    this.scrollTriggerInstance = ScrollTrigger.create({
-      trigger: pinned,
-      start: 'top top',
-      end: () => '+=' + window.innerHeight,
-      pin: true,
-      onToggle: (self: any) => {
-        if (self.isActive) {
-          this.observerInstance?.enable();
-        } else {
-          this.observerInstance?.disable();
-        }
-      }
-    });
-  }
-
-  /**
-   * Reproduce una fase (54 fotogramas) avanzando/retrocediendo la tarjeta. Tweenea
-   * desde el fotograma actual hasta el fotograma de reposo de la fase destino, de modo
-   * que entrar, avanzar y retroceder sean siempre continuos (sin saltos). En los
-   * extremos deshabilita el Observer para dejar pasar el scroll nativo.
-   */
-  private stepPhase(dir: 1 | -1) {
-    if (this.isStepping) return;
-
-    const next = this.phase + dir;
-    if (next < 0 || next > PROJECT_COUNT - 1) {
-      // Extremo: soltar el scroll. onToggle lo reactiva al reingresar en la sección.
-      this.observerInstance?.disable();
-      return;
-    }
-
-    this.isStepping = true;
-    const from = this.currentFrameIndex < 0 ? 0 : this.currentFrameIndex;
-    const to = this.restFrame(next);
-
-    this.phase = next;
-    this.ngZone.run(() => this.activeIndex.set(next));
-
-    const proxy = { f: from };
-    this.frameTween?.kill();
-    this.frameTween = this.gsap.to(proxy, {
-      f: to,
-      duration: 0.8,
-      ease: 'power2.inOut',
-      onUpdate: () => this.drawFrame(Math.round(proxy.f)),
-      onComplete: () => { this.isStepping = false; }
-    });
-  }
-
-  /** Fotograma de reposo de una fase (final de su crecimiento de 54 fotogramas). */
-  private restFrame(phase: number): number {
-    return Math.min((phase + 1) * FRAMES_PER_PHASE, FRAME_COUNT - 1);
   }
 
   // ------------------------------------------------------------------
@@ -440,7 +350,4 @@ export class ProjectsComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  openProjectLink(url: string) {
-    window.open(url, '_blank');
-  }
 }

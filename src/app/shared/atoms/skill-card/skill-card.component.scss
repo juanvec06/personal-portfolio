@@ -18,11 +18,15 @@
     background: var(--card-background, #060010cc);
     position: relative;
     overflow: hidden;
-    transition: transform 0.15s ease-out, box-shadow 0.3s ease;
     cursor: default;
 
+    /* Hover de escritorio: solo luz, cero movimiento. El resplandor se enciende
+       centrado (--glow-x/--glow-y se quedan en su 50% por defecto) en lugar de
+       seguir al cursor, que era la otra fuente de movimiento. */
     &:hover {
-        box-shadow: 
+        --glow-intensity: 1;
+
+        box-shadow:
             0 8px 25px rgba(0, 0, 0, 0.3),
             0 0 30px rgba(var(--glow-color), 0.2);
     }
@@ -54,23 +58,28 @@
         z-index: 1;
     }
 
+    /* Caja fija: los iconos de fuente (bi) y los remotos (imagen) ocupaban
+       tamaños distintos (40px contra 64px de ancho), y con las dos clases
+       mezcladas en la misma fila el desajuste se veía en cada tarjeta. */
     &__icon {
+        width: 48px;
+        height: 48px;
         font-size: 2.5rem;
-        color: var(--text-color, #fff);
+        color: var(--text-color);
         display: flex;
         align-items: center;
         justify-content: center;
         position: relative;
         z-index: 2;
 
+        /* Sin esto el <i> hereda un interlineado de 1.5 y su caja mide 60px de
+           alto dentro de una caja de 48: el glifo se salía por abajo. */
         i {
-            transition: transform 0.3s ease;
+            line-height: 1;
         }
     }
 
-    &:hover &__icon i {
-        transform: scale(1.1);
-    }
+
 
     &__name {
         font-size: 0.85rem;
@@ -81,10 +90,11 @@
         z-index: 2;
     }
     img {
-        width: 4rem;
-        height: 60px;
+        /* 40px = los 2.5rem del icono de fuente, para que ambos midan lo mismo
+           dentro de la caja de 48px. */
+        width: 40px;
+        height: 40px;
         object-fit: contain;
-        transition: transform 0.3s ease;
         // First filter (for light theme)
         filter: brightness(0) saturate(100%) invert(19%) sepia(72%) saturate(534%) hue-rotate(350deg) brightness(92%) contrast(94%);
         
@@ -122,5 +132,18 @@
         opacity: 1;
         transition: opacity 0.3s ease;
         z-index: 1;
+
+        /* Hace girar el degradado cónico. --angle se anima AQUÍ, en el propio
+           pseudo-elemento, y no en el body: al ser una custom property con
+           inherits:true, animarla arriba forzaría recalcular el estilo de todo
+           el árbol DOM en cada frame (ver la nota en styles.scss). */
+        animation: 3s spin linear infinite;
     }
+}
+
+/* Angular aísla los @keyframes por componente, así que este 'spin' no choca
+   con los del home o projects. */
+@keyframes spin {
+    from { --angle: 0deg; }
+    to { --angle: 360deg; }
 }
